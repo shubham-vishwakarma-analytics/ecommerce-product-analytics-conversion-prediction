@@ -1,58 +1,70 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
+import os
 import joblib
+import numpy as np
+import pandas as pd
+import streamlit as st
+import plotly.express as px
+import plotly.graph_objects as go
 
 
-# =========================================================
+# ============================================================
 # PAGE CONFIGURATION
-# =========================================================
+# ============================================================
 
 st.set_page_config(
     page_title="E-Commerce Digital Analytics",
     page_icon="🛒",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
 
-# =========================================================
+# ============================================================
+# PROJECT PATHS
+# ============================================================
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+DATA_DIR = os.path.join(BASE_DIR, "data")
+MODEL_DIR = os.path.join(BASE_DIR, "models")
+
+
+# ============================================================
 # LOAD DATA
-# =========================================================
+# ============================================================
 
 @st.cache_data
 def load_data():
 
     business_summary = pd.read_csv(
-        "data/business_summary.csv"
+        os.path.join(DATA_DIR, "business_summary.csv")
     )
 
     device_analysis = pd.read_csv(
-        "data/device_analysis.csv"
+        os.path.join(DATA_DIR, "device_analysis.csv")
     )
 
     marketing_analysis = pd.read_csv(
-        "data/marketing_analysis.csv"
+        os.path.join(DATA_DIR, "marketing_analysis.csv")
     )
 
     model_performance = pd.read_csv(
-        "data/model_performance.csv"
+        os.path.join(DATA_DIR, "model_performance.csv")
     )
 
     prediction_results = pd.read_csv(
-        "data/prediction_results.csv"
+        os.path.join(DATA_DIR, "prediction_results.csv")
     )
 
     product_analysis = pd.read_csv(
-        "data/product_analysis.csv"
+        os.path.join(DATA_DIR, "product_analysis.csv")
     )
 
     refund_analysis = pd.read_csv(
-        "data/refund_analysis.csv"
+        os.path.join(DATA_DIR, "refund_analysis.csv")
     )
 
     repeat_session_analysis = pd.read_csv(
-        "data/repeat_session_analysis.csv"
+        os.path.join(DATA_DIR, "repeat_session_analysis.csv")
     )
 
     return (
@@ -67,30 +79,45 @@ def load_data():
     )
 
 
-(
-    business_summary,
-    device_analysis,
-    marketing_analysis,
-    model_performance,
-    prediction_results,
-    product_analysis,
-    refund_analysis,
-    repeat_session_analysis
-) = load_data()
-
-
-# =========================================================
+# ============================================================
 # LOAD ML MODEL
-# =========================================================
+# ============================================================
 
 @st.cache_resource
 def load_model():
 
-    model = joblib.load(
-        "models/conversion_prediction_model.pkl"
+    model_path = os.path.join(
+        MODEL_DIR,
+        "conversion_prediction_model.pkl"
     )
 
-    return model
+    return joblib.load(model_path)
+
+
+# ============================================================
+# LOAD DATA AND MODEL
+# ============================================================
+
+try:
+
+    (
+        business_summary,
+        device_analysis,
+        marketing_analysis,
+        model_performance,
+        prediction_results,
+        product_analysis,
+        refund_analysis,
+        repeat_session_analysis
+    ) = load_data()
+
+except Exception as e:
+
+    st.error("Unable to load project data.")
+
+    st.exception(e)
+
+    st.stop()
 
 
 try:
@@ -103,33 +130,38 @@ except Exception as e:
 
     model = None
     model_loaded = False
-    model_error = str(e)
 
-
-# =========================================================
-# BUSINESS METRICS
-# =========================================================
-
-business_metrics = dict(
-    zip(
-        business_summary["Metric"],
-        business_summary["Value"]
+    st.warning(
+        "ML model could not be loaded. "
+        "The dashboard will still work, but live prediction will be unavailable."
     )
+
+    st.exception(e)
+
+
+# ============================================================
+# TITLE
+# ============================================================
+
+st.title("🛒 E-Commerce Digital Analytics Dashboard")
+
+st.markdown(
+    """
+    **Business Analytics • Customer Behavior • Marketing • Product Performance • Machine Learning**
+    """
 )
 
+st.divider()
 
-# =========================================================
+
+# ============================================================
 # SIDEBAR
-# =========================================================
+# ============================================================
 
-st.sidebar.title("🛒 E-Commerce Analytics")
-
-st.sidebar.markdown(
-    "### Dashboard Navigation"
-)
+st.sidebar.title("📊 Navigation")
 
 page = st.sidebar.radio(
-    "Select Section",
+    "Select Analysis",
     [
         "📊 Business Overview",
         "🛍️ Product Performance",
@@ -141,106 +173,63 @@ page = st.sidebar.radio(
     ]
 )
 
-st.sidebar.divider()
 
-st.sidebar.caption(
-    "E-Commerce Digital Analytics"
-)
-
-st.sidebar.caption(
-    "Built with Python, Pandas, Plotly & Streamlit"
-)
-
-
-# =========================================================
-# MAIN HEADER
-# =========================================================
-
-st.title("🛒 E-Commerce Digital Analytics")
-
-st.caption(
-    "Interactive analytics dashboard for sales, products, "
-    "marketing, customers, refunds and conversion performance."
-)
-
-
-# =========================================================
-# PAGE 1 — BUSINESS OVERVIEW
-# =========================================================
+# ============================================================
+# BUSINESS OVERVIEW
+# ============================================================
 
 if page == "📊 Business Overview":
 
     st.header("📊 Business Overview")
 
-    st.markdown(
-        "A high-level view of e-commerce business performance."
-    )
+    metrics = {}
 
-    st.divider()
+    for _, row in business_summary.iterrows():
+
+        metrics[str(row["Metric"])] = row["Value"]
+
+
+    # KPI values
+    total_sessions = metrics.get("Total Sessions", 0)
+    total_revenue = metrics.get("Total Revenue", 0)
+    total_orders = metrics.get("Total Orders", 0)
+    conversion_rate = metrics.get("Conversion Rate", 0)
+
 
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-
         st.metric(
             "Total Sessions",
-            f"{business_metrics.get('Total Sessions', 0):,.0f}"
+            f"{total_sessions:,.0f}"
+            if isinstance(total_sessions, (int, float, np.number))
+            else total_sessions
         )
 
     with col2:
-
         st.metric(
-            "Converted Sessions",
-            f"{business_metrics.get('Converted Sessions', 0):,.0f}"
+            "Total Revenue",
+            f"${total_revenue:,.2f}"
+            if isinstance(total_revenue, (int, float, np.number))
+            else total_revenue
         )
 
     with col3:
-
         st.metric(
-            "Conversion Rate",
-            f"{business_metrics.get('Conversion Rate (%)', 0):.2f}%"
+            "Total Orders",
+            f"{total_orders:,.0f}"
+            if isinstance(total_orders, (int, float, np.number))
+            else total_orders
         )
 
     with col4:
-
         st.metric(
-            "Revenue",
-            f"${business_metrics.get('Revenue', 0):,.2f}"
+            "Conversion Rate",
+            f"{conversion_rate:.2f}%"
+            if isinstance(conversion_rate, (int, float, np.number))
+            else conversion_rate
         )
 
-
-    col5, col6, col7, col8 = st.columns(4)
-
-    with col5:
-
-        st.metric(
-            "COGS",
-            f"${business_metrics.get('COGS', 0):,.2f}"
-        )
-
-    with col6:
-
-        st.metric(
-            "Gross Profit",
-            f"${business_metrics.get('Gross Profit', 0):,.2f}"
-        )
-
-    with col7:
-
-        st.metric(
-            "Gross Margin",
-            f"{business_metrics.get('Gross Margin (%)', 0):.2f}%"
-        )
-
-    with col8:
-
-        st.metric(
-            "Refund Amount",
-            f"${business_metrics.get('Total Refund Amount', 0):,.2f}"
-        )
-
-
-    st.divider()
 
     st.subheader("Business Summary")
 
@@ -251,446 +240,240 @@ if page == "📊 Business Overview":
     )
 
 
-# =========================================================
-# PAGE 2 — PRODUCT PERFORMANCE
-# =========================================================
+# ============================================================
+# PRODUCT PERFORMANCE
+# ============================================================
 
 elif page == "🛍️ Product Performance":
 
     st.header("🛍️ Product Performance")
 
-    st.markdown(
-        "Analyze product revenue, units sold, gross profit and margins."
-    )
-
-    st.divider()
-
-    product_list = product_analysis[
-        "product_name"
-    ].unique().tolist()
-
-    selected_products = st.multiselect(
-        "Select Products",
-        product_list,
-        default=product_list
-    )
-
-    filtered_products = product_analysis[
-        product_analysis["product_name"].isin(
-            selected_products
-        )
-    ]
-
-
     col1, col2 = st.columns(2)
 
     with col1:
 
-        revenue_fig = px.bar(
-            filtered_products,
+        fig = px.bar(
+            product_analysis,
             x="product_name",
             y="revenue",
             title="Revenue by Product",
-            labels={
-                "product_name": "Product",
-                "revenue": "Revenue"
-            },
             text_auto=".2s"
         )
 
-        revenue_fig.update_layout(
-            xaxis_title=None,
-            yaxis_title="Revenue",
-            hovermode="x unified"
-        )
-
         st.plotly_chart(
-            revenue_fig,
+            fig,
             use_container_width=True
         )
-
 
     with col2:
 
-        profit_fig = px.bar(
-            filtered_products,
+        fig = px.bar(
+            product_analysis,
             x="product_name",
             y="gross_profit",
             title="Gross Profit by Product",
-            labels={
-                "product_name": "Product",
-                "gross_profit": "Gross Profit"
-            },
             text_auto=".2s"
         )
 
-        profit_fig.update_layout(
-            xaxis_title=None,
-            yaxis_title="Gross Profit",
-            hovermode="x unified"
-        )
-
         st.plotly_chart(
-            profit_fig,
+            fig,
             use_container_width=True
         )
 
 
-    margin_fig = px.bar(
-        filtered_products,
+    fig = px.bar(
+        product_analysis,
         x="product_name",
-        y="gross_margin_pct",
-        title="Gross Margin by Product",
-        labels={
-            "product_name": "Product",
-            "gross_margin_pct": "Gross Margin (%)"
-        },
-        text_auto=".2f"
-    )
-
-    margin_fig.update_layout(
-        xaxis_title=None,
-        yaxis_title="Gross Margin (%)"
+        y="units_sold",
+        title="Units Sold by Product",
+        text_auto=True
     )
 
     st.plotly_chart(
-        margin_fig,
+        fig,
         use_container_width=True
     )
 
 
-    st.subheader("Product Performance Details")
+    st.subheader("Product Analysis")
 
     st.dataframe(
-        filtered_products,
+        product_analysis,
         use_container_width=True,
         hide_index=True
     )
 
 
-# =========================================================
-# PAGE 3 — REFUND ANALYSIS
-# =========================================================
+# ============================================================
+# REFUND ANALYSIS
+# ============================================================
 
 elif page == "💰 Refund Analysis":
 
     st.header("💰 Refund Analysis")
 
-    st.markdown(
-        "Analyze refund amount, refund count and refund rate by product."
-    )
-
-    st.divider()
-
-    refund_products = refund_analysis[
-        "product_name"
-    ].unique().tolist()
-
-    selected_refund_products = st.multiselect(
-        "Select Products",
-        refund_products,
-        default=refund_products
-    )
-
-    filtered_refunds = refund_analysis[
-        refund_analysis["product_name"].isin(
-            selected_refund_products
-        )
-    ]
-
-
     col1, col2 = st.columns(2)
 
     with col1:
 
-        refund_amount_fig = px.bar(
-            filtered_refunds,
+        fig = px.bar(
+            refund_analysis,
             x="product_name",
             y="refund_amount",
             title="Refund Amount by Product",
-            labels={
-                "product_name": "Product",
-                "refund_amount": "Refund Amount"
-            },
             text_auto=".2s"
         )
 
-        refund_amount_fig.update_layout(
-            xaxis_title=None,
-            yaxis_title="Refund Amount"
-        )
-
         st.plotly_chart(
-            refund_amount_fig,
+            fig,
             use_container_width=True
         )
-
 
     with col2:
 
-        refund_rate_fig = px.bar(
-            filtered_refunds,
+        fig = px.bar(
+            refund_analysis,
             x="product_name",
             y="refund_rate_pct",
             title="Refund Rate by Product",
-            labels={
-                "product_name": "Product",
-                "refund_rate_pct": "Refund Rate (%)"
-            },
             text_auto=".2f"
         )
 
-        refund_rate_fig.update_layout(
-            xaxis_title=None,
-            yaxis_title="Refund Rate (%)"
-        )
-
         st.plotly_chart(
-            refund_rate_fig,
+            fig,
             use_container_width=True
         )
-
-
-    refund_count_fig = px.bar(
-        filtered_refunds,
-        x="product_name",
-        y="refund_count",
-        title="Refund Count by Product",
-        labels={
-            "product_name": "Product",
-            "refund_count": "Refund Count"
-        },
-        text_auto=True
-    )
-
-    refund_count_fig.update_layout(
-        xaxis_title=None,
-        yaxis_title="Refund Count"
-    )
-
-    st.plotly_chart(
-        refund_count_fig,
-        use_container_width=True
-    )
 
 
     st.subheader("Refund Details")
 
     st.dataframe(
-        filtered_refunds,
+        refund_analysis,
         use_container_width=True,
         hide_index=True
     )
 
 
-# =========================================================
-# PAGE 4 — MARKETING PERFORMANCE
-# =========================================================
+# ============================================================
+# MARKETING PERFORMANCE
+# ============================================================
 
 elif page == "📢 Marketing Performance":
 
     st.header("📢 Marketing Performance")
 
-    st.markdown(
-        "Compare marketing sources based on sessions, revenue "
-        "and conversion performance."
-    )
-
-    st.divider()
-
-    marketing_sources = marketing_analysis[
-        "reporting_utm_source"
-    ].unique().tolist()
-
-    selected_sources = st.multiselect(
-        "Select Marketing Sources",
-        marketing_sources,
-        default=marketing_sources
-    )
-
-    filtered_marketing = marketing_analysis[
-        marketing_analysis["reporting_utm_source"].isin(
-            selected_sources
-        )
-    ]
-
-
     col1, col2 = st.columns(2)
 
     with col1:
 
-        marketing_revenue_fig = px.bar(
-            filtered_marketing,
+        fig = px.bar(
+            marketing_analysis,
             x="reporting_utm_source",
-            y="revenue",
-            title="Revenue by Marketing Source",
-            labels={
-                "reporting_utm_source": "Marketing Source",
-                "revenue": "Revenue"
-            },
-            text_auto=".2s"
-        )
-
-        marketing_revenue_fig.update_layout(
-            xaxis_title=None,
-            yaxis_title="Revenue"
+            y="sessions",
+            title="Sessions by Marketing Source",
+            text_auto=True
         )
 
         st.plotly_chart(
-            marketing_revenue_fig,
+            fig,
             use_container_width=True
         )
-
 
     with col2:
 
-        marketing_conversion_fig = px.bar(
-            filtered_marketing,
+        fig = px.bar(
+            marketing_analysis,
             x="reporting_utm_source",
             y="conversion_rate_pct",
             title="Conversion Rate by Marketing Source",
-            labels={
-                "reporting_utm_source": "Marketing Source",
-                "conversion_rate_pct": "Conversion Rate (%)"
-            },
             text_auto=".2f"
         )
 
-        marketing_conversion_fig.update_layout(
-            xaxis_title=None,
-            yaxis_title="Conversion Rate (%)"
-        )
-
         st.plotly_chart(
-            marketing_conversion_fig,
+            fig,
             use_container_width=True
         )
 
 
-    sessions_fig = px.bar(
-        filtered_marketing,
+    fig = px.bar(
+        marketing_analysis,
         x="reporting_utm_source",
-        y="sessions",
-        title="Sessions by Marketing Source",
-        labels={
-            "reporting_utm_source": "Marketing Source",
-            "sessions": "Sessions"
-        },
+        y="revenue",
+        title="Revenue by Marketing Source",
         text_auto=".2s"
     )
 
-    sessions_fig.update_layout(
-        xaxis_title=None,
-        yaxis_title="Sessions"
-    )
-
     st.plotly_chart(
-        sessions_fig,
+        fig,
         use_container_width=True
     )
 
 
-    st.subheader("Marketing Details")
+    st.subheader("Marketing Analysis")
 
     st.dataframe(
-        filtered_marketing,
+        marketing_analysis,
         use_container_width=True,
         hide_index=True
     )
 
 
-# =========================================================
-# PAGE 5 — DEVICE PERFORMANCE
-# =========================================================
+# ============================================================
+# DEVICE PERFORMANCE
+# ============================================================
 
 elif page == "📱 Device Performance":
 
     st.header("📱 Device Performance")
 
-    st.markdown(
-        "Compare customer sessions and conversion performance "
-        "across devices."
-    )
-
-    st.divider()
-
-
     col1, col2 = st.columns(2)
 
     with col1:
 
-        device_sessions_fig = px.bar(
+        fig = px.bar(
             device_analysis,
             x="reporting_device_type",
             y="sessions",
             title="Sessions by Device",
-            labels={
-                "reporting_device_type": "Device",
-                "sessions": "Sessions"
-            },
-            text_auto=".2s"
-        )
-
-        device_sessions_fig.update_layout(
-            xaxis_title=None,
-            yaxis_title="Sessions"
+            text_auto=True
         )
 
         st.plotly_chart(
-            device_sessions_fig,
+            fig,
             use_container_width=True
         )
 
-
     with col2:
 
-        device_conversion_fig = px.bar(
+        fig = px.bar(
             device_analysis,
             x="reporting_device_type",
             y="conversion_rate_pct",
             title="Conversion Rate by Device",
-            labels={
-                "reporting_device_type": "Device",
-                "conversion_rate_pct": "Conversion Rate (%)"
-            },
             text_auto=".2f"
         )
 
-        device_conversion_fig.update_layout(
-            xaxis_title=None,
-            yaxis_title="Conversion Rate (%)"
-        )
-
         st.plotly_chart(
-            device_conversion_fig,
+            fig,
             use_container_width=True
         )
 
 
-    revenue_session_fig = px.bar(
+    fig = px.bar(
         device_analysis,
         x="reporting_device_type",
-        y="revenue_per_session",
-        title="Revenue per Session by Device",
-        labels={
-            "reporting_device_type": "Device",
-            "revenue_per_session": "Revenue per Session"
-        },
-        text_auto=".2f"
-    )
-
-    revenue_session_fig.update_layout(
-        xaxis_title=None,
-        yaxis_title="Revenue per Session"
+        y="revenue",
+        title="Revenue by Device",
+        text_auto=".2s"
     )
 
     st.plotly_chart(
-        revenue_session_fig,
+        fig,
         use_container_width=True
     )
 
 
-    st.subheader("Device Details")
+    st.subheader("Device Analysis")
 
     st.dataframe(
         device_analysis,
@@ -699,98 +482,62 @@ elif page == "📱 Device Performance":
     )
 
 
-# =========================================================
-# PAGE 6 — CUSTOMER SESSIONS
-# =========================================================
+# ============================================================
+# CUSTOMER SESSIONS
+# ============================================================
 
 elif page == "🔁 Customer Sessions":
 
-    st.header("🔁 Repeat vs New Sessions")
-
-    st.markdown(
-        "Compare repeat sessions with new sessions based on "
-        "sessions, conversion and revenue."
-    )
-
-    st.divider()
-
+    st.header("🔁 Customer Session Analysis")
 
     col1, col2 = st.columns(2)
 
     with col1:
 
-        repeat_conversion_fig = px.bar(
+        fig = px.bar(
             repeat_session_analysis,
             x="is_repeat_session",
-            y="conversion_rate_pct",
-            title="Conversion Rate",
-            labels={
-                "is_repeat_session": "Session Type",
-                "conversion_rate_pct": "Conversion Rate (%)"
-            },
-            text_auto=".2f"
-        )
-
-        repeat_conversion_fig.update_layout(
-            xaxis_title=None,
-            yaxis_title="Conversion Rate (%)"
+            y="sessions",
+            title="Sessions: New vs Repeat",
+            text_auto=True
         )
 
         st.plotly_chart(
-            repeat_conversion_fig,
+            fig,
             use_container_width=True
         )
-
 
     with col2:
 
-        repeat_revenue_fig = px.bar(
+        fig = px.bar(
             repeat_session_analysis,
             x="is_repeat_session",
-            y="revenue",
-            title="Revenue",
-            labels={
-                "is_repeat_session": "Session Type",
-                "revenue": "Revenue"
-            },
-            text_auto=".2s"
-        )
-
-        repeat_revenue_fig.update_layout(
-            xaxis_title=None,
-            yaxis_title="Revenue"
+            y="conversion_rate_pct",
+            title="Conversion Rate: New vs Repeat",
+            text_auto=".2f"
         )
 
         st.plotly_chart(
-            repeat_revenue_fig,
+            fig,
             use_container_width=True
         )
 
 
-    sessions_fig = px.bar(
+    fig = px.bar(
         repeat_session_analysis,
         x="is_repeat_session",
-        y="sessions",
-        title="Sessions by Customer Type",
-        labels={
-            "is_repeat_session": "Session Type",
-            "sessions": "Sessions"
-        },
+        y="revenue",
+        title="Revenue: New vs Repeat",
         text_auto=".2s"
     )
 
-    sessions_fig.update_layout(
-        xaxis_title=None,
-        yaxis_title="Sessions"
-    )
-
     st.plotly_chart(
-        sessions_fig,
+        fig,
         use_container_width=True
     )
 
 
-    st.subheader("Customer Session Details")
+    st.subheader("Session Analysis")
 
     st.dataframe(
         repeat_session_analysis,
@@ -799,27 +546,18 @@ elif page == "🔁 Customer Sessions":
     )
 
 
-# =========================================================
-# PAGE 7 — MACHINE LEARNING MODEL
-# =========================================================
+# ============================================================
+# MACHINE LEARNING
+# ============================================================
 
 elif page == "🤖 ML Model":
 
-    st.header("🤖 Machine Learning Model")
-
-    st.markdown(
-        "Conversion prediction model performance, "
-        "historical predictions and live prediction."
-    )
-
-    st.divider()
+    st.header("🤖 Conversion Prediction Model")
 
 
-    # =====================================================
-    # MODEL STATUS
-    # =====================================================
-
-    st.subheader("Model Status")
+    # --------------------------------------------------------
+    # Model Status
+    # --------------------------------------------------------
 
     if model_loaded:
 
@@ -830,19 +568,15 @@ elif page == "🤖 ML Model":
     else:
 
         st.error(
-            "❌ The prediction model could not be loaded."
-        )
-
-        st.code(
-            model_error
+            "❌ Conversion prediction model is unavailable."
         )
 
 
-    # =====================================================
-    # MODEL PERFORMANCE
-    # =====================================================
+    # --------------------------------------------------------
+    # Historical Model Performance
+    # --------------------------------------------------------
 
-    st.subheader("Model Performance")
+    st.subheader("📈 Model Performance")
 
     st.dataframe(
         model_performance,
@@ -851,164 +585,112 @@ elif page == "🤖 ML Model":
     )
 
 
-    # =====================================================
-    # HISTORICAL PREDICTION SUMMARY
-    # =====================================================
+    # --------------------------------------------------------
+    # Historical Prediction Results
+    # --------------------------------------------------------
 
-    st.subheader("Historical Prediction Summary")
+    st.subheader("📊 Historical Prediction Results")
 
-    total_predictions = len(
-        prediction_results
-    )
-
-    converted_predictions = prediction_results[
-        "predicted_conversion"
-    ].sum()
-
-    average_probability = prediction_results[
-        "conversion_probability"
-    ].mean()
-
-
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
 
     with col1:
 
-        st.metric(
-            "Total Predictions",
-            f"{total_predictions:,}"
+        actual_counts = (
+            prediction_results["actual_conversion"]
+            .value_counts()
+            .reset_index()
+        )
+
+        actual_counts.columns = [
+            "Conversion",
+            "Count"
+        ]
+
+        fig = px.bar(
+            actual_counts,
+            x="Conversion",
+            y="Count",
+            title="Actual Conversion Distribution",
+            text_auto=True
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
         )
 
     with col2:
 
-        st.metric(
-            "Predicted Conversions",
-            f"{converted_predictions:,.0f}"
+        predicted_counts = (
+            prediction_results["predicted_conversion"]
+            .value_counts()
+            .reset_index()
         )
 
-    with col3:
+        predicted_counts.columns = [
+            "Conversion",
+            "Count"
+        ]
 
-        st.metric(
-            "Average Conversion Probability",
-            f"{average_probability:.2%}"
+        fig = px.bar(
+            predicted_counts,
+            x="Conversion",
+            y="Count",
+            title="Predicted Conversion Distribution",
+            text_auto=True
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
         )
 
 
-    # =====================================================
-    # ACTUAL VS PREDICTED
-    # =====================================================
+    # --------------------------------------------------------
+    # Conversion Probability
+    # --------------------------------------------------------
 
-    st.subheader("Actual vs Predicted Conversion")
-
-    comparison = pd.DataFrame(
-        {
-            "Conversion Type": [
-                "Actual Conversion",
-                "Predicted Conversion"
-            ],
-            "Count": [
-                prediction_results[
-                    "actual_conversion"
-                ].sum(),
-
-                prediction_results[
-                    "predicted_conversion"
-                ].sum()
-            ]
-        }
-    )
-
-
-    comparison_fig = px.bar(
-        comparison,
-        x="Conversion Type",
-        y="Count",
-        title="Actual vs Predicted Conversions",
-        text_auto=True
-    )
-
-    comparison_fig.update_layout(
-        xaxis_title=None,
-        yaxis_title="Count"
-    )
-
-    st.plotly_chart(
-        comparison_fig,
-        use_container_width=True
-    )
-
-
-    # =====================================================
-    # PROBABILITY DISTRIBUTION
-    # =====================================================
-
-    st.subheader(
-        "Conversion Probability Distribution"
-    )
-
-    probability_fig = px.histogram(
+    fig = px.histogram(
         prediction_results,
         x="conversion_probability",
         nbins=30,
-        title="Distribution of Conversion Probability",
-        labels={
-            "conversion_probability":
-            "Conversion Probability"
-        }
-    )
-
-    probability_fig.update_layout(
-        xaxis_title="Conversion Probability",
-        yaxis_title="Number of Sessions"
+        title="Conversion Probability Distribution"
     )
 
     st.plotly_chart(
-        probability_fig,
+        fig,
         use_container_width=True
     )
 
 
-    # =====================================================
-    # LIVE PREDICTION
-    # =====================================================
+    # --------------------------------------------------------
+    # Live Prediction
+    # --------------------------------------------------------
 
     st.divider()
 
-    st.header("🔮 Live Conversion Prediction")
-
-    st.markdown(
-        "Enter session information below to estimate the "
-        "probability that the session will convert."
-    )
-
+    st.subheader("🔮 Live Conversion Prediction")
 
     if not model_loaded:
 
         st.warning(
-            "Live prediction is unavailable because "
-            "the ML model could not be loaded."
+            "Live prediction is unavailable because the ML model could not be loaded."
         )
 
     else:
 
-        # -------------------------------------------------
-        # INPUT SECTION
-        # -------------------------------------------------
-
-        st.subheader("Session Information")
-
         col1, col2 = st.columns(2)
 
+        # ----------------------------------------------------
+        # Column 1
+        # ----------------------------------------------------
 
         with col1:
 
             repeat_session = st.selectbox(
-                "Is Repeat Session?",
-                options=[0, 1],
-                format_func=lambda x:
-                    "Yes" if x == 1 else "No"
+                "Repeat Session",
+                ["No", "Yes"]
             )
-
 
             utm_source_options = sorted(
                 prediction_results[
@@ -1022,7 +704,7 @@ elif page == "🤖 ML Model":
 
             utm_source = st.selectbox(
                 "UTM Source",
-                options=utm_source_options
+                utm_source_options
             )
 
 
@@ -1038,11 +720,11 @@ elif page == "🤖 ML Model":
 
             device_type = st.selectbox(
                 "Device Type",
-                options=device_options
+                device_options
             )
 
 
-            session_hour = st.slider(
+            session_hour = st.number_input(
                 "Session Hour",
                 min_value=0,
                 max_value=23,
@@ -1050,17 +732,17 @@ elif page == "🤖 ML Model":
             )
 
 
-            day_of_week = st.slider(
+            day_of_week = st.number_input(
                 "Day of Week",
                 min_value=0,
                 max_value=6,
-                value=2,
-                help=(
-                    "0 = Monday, 1 = Tuesday, "
-                    "2 = Wednesday, ..., 6 = Sunday"
-                )
+                value=0
             )
 
+
+        # ----------------------------------------------------
+        # Column 2
+        # ----------------------------------------------------
 
         with col2:
 
@@ -1074,13 +756,9 @@ elif page == "🤖 ML Model":
                 .tolist()
             )
 
-            campaign_options = [
-                "None"
-            ] + campaign_options
-
-            utm_campaign = st.selectbox(
+            campaign = st.selectbox(
                 "UTM Campaign",
-                options=campaign_options
+                ["None"] + campaign_options
             )
 
 
@@ -1094,13 +772,9 @@ elif page == "🤖 ML Model":
                 .tolist()
             )
 
-            content_options = [
-                "None"
-            ] + content_options
-
-            utm_content = st.selectbox(
+            content = st.selectbox(
                 "UTM Content",
-                options=content_options
+                ["None"] + content_options
             )
 
 
@@ -1114,21 +788,17 @@ elif page == "🤖 ML Model":
                 .tolist()
             )
 
-            referer_options = [
-                "None"
-            ] + referer_options
-
-            http_referer = st.selectbox(
+            referer = st.selectbox(
                 "HTTP Referer",
-                options=referer_options
+                ["None"] + referer_options
             )
 
 
-            session_month = st.slider(
+            session_month = st.number_input(
                 "Session Month",
                 min_value=1,
                 max_value=12,
-                value=6
+                value=1
             )
 
 
@@ -1136,142 +806,122 @@ elif page == "🤖 ML Model":
                 "Session Year",
                 min_value=2000,
                 max_value=2100,
-                value=2015,
-                step=1
+                value=2026
             )
 
 
-        st.divider()
+        # ----------------------------------------------------
+        # Prepare Input
+        # ----------------------------------------------------
 
+        input_data = pd.DataFrame(
+            {
+                "is_repeat_session": [
+                    1 if repeat_session == "Yes" else 0
+                ],
 
-        # -------------------------------------------------
-        # PREDICTION BUTTON
-        # -------------------------------------------------
+                "reporting_utm_source": [
+                    utm_source
+                ],
 
-        predict_button = st.button(
-            "🔮 Predict Conversion",
-            type="primary",
-            use_container_width=True
+                "utm_campaign": [
+                    None if campaign == "None" else campaign
+                ],
+
+                "utm_content": [
+                    None if content == "None" else content
+                ],
+
+                "reporting_device_type": [
+                    device_type
+                ],
+
+                "http_referer": [
+                    None if referer == "None" else referer
+                ],
+
+                "session_hour": [
+                    session_hour
+                ],
+
+                "day_of_week": [
+                    day_of_week
+                ],
+
+                "session_month": [
+                    session_month
+                ],
+
+                "session_year": [
+                    session_year
+                ]
+            }
         )
 
 
-        if predict_button:
+        # ----------------------------------------------------
+        # Prediction Button
+        # ----------------------------------------------------
 
-            live_input = pd.DataFrame(
-                {
-                    "is_repeat_session": [
-                        repeat_session
-                    ],
-
-                    "reporting_utm_source": [
-                        utm_source
-                    ],
-
-                    "utm_campaign": [
-                        None
-                        if utm_campaign == "None"
-                        else utm_campaign
-                    ],
-
-                    "utm_content": [
-                        None
-                        if utm_content == "None"
-                        else utm_content
-                    ],
-
-                    "reporting_device_type": [
-                        device_type
-                    ],
-
-                    "http_referer": [
-                        None
-                        if http_referer == "None"
-                        else http_referer
-                    ],
-
-                    "session_hour": [
-                        session_hour
-                    ],
-
-                    "day_of_week": [
-                        day_of_week
-                    ],
-
-                    "session_month": [
-                        session_month
-                    ],
-
-                    "session_year": [
-                        session_year
-                    ]
-                }
-            )
-
+        if st.button(
+            "🔮 Predict Conversion",
+            use_container_width=True
+        ):
 
             try:
 
                 prediction = model.predict(
-                    live_input
+                    input_data
                 )[0]
 
                 probability = model.predict_proba(
-                    live_input
+                    input_data
                 )[0][1]
 
 
                 st.divider()
 
-                st.subheader(
-                    "Prediction Result"
-                )
 
+                if prediction == 1:
 
-                result_col1, result_col2 = st.columns(2)
+                    st.success(
+                        "✅ Prediction: Customer is likely to convert."
+                    )
 
+                else:
 
-                with result_col1:
-
-                    if prediction == 1:
-
-                        st.success(
-                            "🟢 Predicted: Conversion"
-                        )
-
-                    else:
-
-                        st.info(
-                            "🔵 Predicted: No Conversion"
-                        )
-
-
-                with result_col2:
-
-                    st.metric(
-                        "Conversion Probability",
-                        f"{probability:.2%}"
+                    st.warning(
+                        "⚠️ Prediction: Customer is unlikely to convert."
                     )
 
 
-                st.progress(
-                    float(probability)
+                st.metric(
+                    "Conversion Probability",
+                    f"{probability * 100:.2f}%"
                 )
 
 
-                st.caption(
-                    "The probability is produced by the "
-                    "trained Logistic Regression pipeline."
-                )
+                # Probability gauge
 
-
-                with st.expander(
-                    "View Input Sent to Model"
-                ):
-
-                    st.dataframe(
-                        live_input,
-                        use_container_width=True,
-                        hide_index=True
+                fig = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=probability * 100,
+                        title={
+                            "text": "Conversion Probability (%)"
+                        },
+                        gauge={
+                            "axis": {
+                                "range": [0, 100]
+                            }
+                        }
                     )
+                )
+
+                st.plotly_chart(
+                    fig,
+                    use_container_width=True
+                )
 
 
             except Exception as e:
@@ -1280,38 +930,15 @@ elif page == "🤖 ML Model":
                     "Prediction failed."
                 )
 
-                st.code(
-                    str(e)
-                )
+                st.exception(e)
 
 
-    # =====================================================
-    # HISTORICAL PREDICTION RESULTS
-    # =====================================================
-
-    st.divider()
-
-    st.subheader("Historical Prediction Results")
-
-    st.write(
-        f"Showing first 100 records out of "
-        f"{len(prediction_results):,} predictions."
-    )
-
-    st.dataframe(
-        prediction_results.head(100),
-        use_container_width=True,
-        hide_index=True
-    )
-
-
-# =========================================================
+# ============================================================
 # FOOTER
-# =========================================================
+# ============================================================
 
 st.divider()
 
 st.caption(
-    "E-Commerce Digital Analytics | "
-    "Python • Pandas • Plotly • Scikit-learn • Streamlit"
+    "E-Commerce Digital Analytics | SQL • Python • Excel • Power BI • Machine Learning • Streamlit"
 )
