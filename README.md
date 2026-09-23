@@ -8,6 +8,12 @@
 **Project Type:** End-to-End Data Analytics & Machine Learning  
 **Domain:** E-Commerce / Digital Analytics
 
+## Live Project
+
+### [View Live Streamlit App — E-Commerce Conversion Analytics](https://ecommerce-conversion-analytics.streamlit.app/)
+
+> Interactive Streamlit application for exploring e-commerce analytics, conversion performance, product insights, and business findings.
+
 ---
 
 ## Project Overview
