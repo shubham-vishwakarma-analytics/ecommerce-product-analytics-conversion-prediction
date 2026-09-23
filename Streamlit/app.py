@@ -3,6 +3,7 @@ import joblib
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+import plotly.graph_objects as go
 
 
 # ============================================================
@@ -128,7 +129,7 @@ def load_data():
 
 
 # ============================================================
-# LOAD MODEL
+# LOAD ML MODEL
 # ============================================================
 
 @st.cache_resource
@@ -138,18 +139,19 @@ def load_model():
         return None
 
     try:
-        model = joblib.load(MODEL_PATH)
-        return model
+        return joblib.load(MODEL_PATH)
 
     except Exception as e:
+
         st.error(
             f"Unable to load ML model: {e}"
         )
+
         return None
 
 
 # ============================================================
-# LOAD ALL DATA
+# LOAD PROJECT DATA
 # ============================================================
 
 try:
@@ -183,12 +185,15 @@ model = load_model()
 
 def get_business_metric(metric_name):
 
-    """Return a metric value from business_summary.csv."""
-
     if business_summary.empty:
         return 0
 
-    metric_column = business_summary["Metric"].astype(str).str.strip().str.lower()
+    metric_column = (
+        business_summary["Metric"]
+        .astype(str)
+        .str.strip()
+        .str.lower()
+    )
 
     matches = business_summary.loc[
         metric_column == metric_name.strip().lower(),
@@ -198,23 +203,21 @@ def get_business_metric(metric_name):
     if matches.empty:
         return 0
 
-    try:
-        return float(
-            pd.to_numeric(
-                matches.iloc[0],
-                errors="coerce"
-            )
-        )
+    value = pd.to_numeric(
+        matches.iloc[0],
+        errors="coerce"
+    )
 
-    except Exception:
+    if pd.isna(value):
         return 0
+
+    return float(value)
 
 
 # ============================================================
 # BUSINESS KPI CALCULATIONS
 # ============================================================
 
-# Total Sessions
 total_sessions = int(
     pd.to_numeric(
         repeat_session_analysis["sessions"],
@@ -223,7 +226,6 @@ total_sessions = int(
 )
 
 
-# Converted Sessions / Orders
 total_orders = int(
     get_business_metric(
         "Converted Sessions"
@@ -231,7 +233,6 @@ total_orders = int(
 )
 
 
-# Conversion Rate
 conversion_rate = (
     total_orders / total_sessions * 100
     if total_sessions > 0
@@ -239,26 +240,19 @@ conversion_rate = (
 )
 
 
-# Revenue per Session
 revenue_per_session = get_business_metric(
     "Revenue per Session"
 )
 
 
-# ------------------------------------------------------------
-# IMPORTANT REVENUE FIX
-# ------------------------------------------------------------
-#
-# business_summary.csv does NOT contain a "Total Revenue"
-# row.
+# IMPORTANT:
+# business_summary.csv does not contain a direct
+# "Total Revenue" row.
 #
 # Therefore:
 #
 # Total Revenue =
 # Total Sessions × Revenue per Session
-#
-# This prevents Total Revenue from incorrectly showing $0.00.
-# ------------------------------------------------------------
 
 total_revenue = (
     total_sessions * revenue_per_session
@@ -266,7 +260,7 @@ total_revenue = (
 
 
 # ============================================================
-# SIDEBAR
+# SIDEBAR NAVIGATION
 # ============================================================
 
 st.sidebar.title(
@@ -292,7 +286,7 @@ page = st.sidebar.radio(
 
 
 # ============================================================
-# HEADER
+# APPLICATION HEADER
 # ============================================================
 
 st.title(
@@ -366,29 +360,49 @@ if page == "📊 Business Overview":
         "Business Summary"
     )
 
-    display_business_summary = business_summary.copy()
-
     st.dataframe(
-        display_business_summary,
+        business_summary,
         use_container_width=True,
         hide_index=True
     )
 
+    st.divider()
+
     # --------------------------------------------------------
-    # IMPORTANT BUSINESS METRICS
+    # BUSINESS METRICS
     # --------------------------------------------------------
 
     st.subheader(
         "Key Business Metrics"
     )
 
+    average_order_value = get_business_metric(
+        "Average Order Value"
+    )
+
+    total_cogs = get_business_metric(
+        "Total COGS"
+    )
+
+    gross_profit = get_business_metric(
+        "Gross Profit"
+    )
+
+    gross_margin = get_business_metric(
+        "Gross Margin (%)"
+    )
+
+    refund_amount = get_business_metric(
+        "Total Refund Amount"
+    )
+
+    refund_percentage = get_business_metric(
+        "Refund % of Revenue"
+    )
+
     col1, col2, col3 = st.columns(3)
 
     with col1:
-
-        average_order_value = get_business_metric(
-            "Average Order Value"
-        )
 
         st.metric(
             "Average Order Value",
@@ -397,20 +411,12 @@ if page == "📊 Business Overview":
 
     with col2:
 
-        total_cogs = get_business_metric(
-            "Total COGS"
-        )
-
         st.metric(
             "Total COGS",
             f"${total_cogs:,.2f}"
         )
 
     with col3:
-
-        gross_profit = get_business_metric(
-            "Gross Profit"
-        )
 
         st.metric(
             "Gross Profit",
@@ -421,20 +427,12 @@ if page == "📊 Business Overview":
 
     with col1:
 
-        gross_margin = get_business_metric(
-            "Gross Margin (%)"
-        )
-
         st.metric(
             "Gross Margin",
             f"{gross_margin:.2f}%"
         )
 
     with col2:
-
-        refund_amount = get_business_metric(
-            "Total Refund Amount"
-        )
 
         st.metric(
             "Total Refund Amount",
@@ -443,14 +441,48 @@ if page == "📊 Business Overview":
 
     with col3:
 
-        refund_percentage = get_business_metric(
-            "Refund % of Revenue"
-        )
-
         st.metric(
             "Refund % of Revenue",
             f"{refund_percentage:.2f}%"
         )
+
+    st.divider()
+
+    # --------------------------------------------------------
+    # BUSINESS KPI VISUAL
+    # --------------------------------------------------------
+
+    business_chart = pd.DataFrame(
+        {
+            "Metric": [
+                "Sessions",
+                "Orders"
+            ],
+            "Value": [
+                total_sessions,
+                total_orders
+            ]
+        }
+    )
+
+    fig = px.bar(
+        business_chart,
+        x="Metric",
+        y="Value",
+        title="Sessions vs Converted Sessions",
+        text_auto=True
+    )
+
+    fig.update_layout(
+        hovermode="x unified",
+        xaxis_title="Metric",
+        yaxis_title="Count"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
 
 
 # ============================================================
@@ -462,10 +494,6 @@ elif page == "🛍️ Product Performance":
     st.header(
         "🛍️ Product Performance"
     )
-
-    # --------------------------------------------------------
-    # PRODUCT TABLE
-    # --------------------------------------------------------
 
     st.subheader(
         "Product Performance Summary"
@@ -480,7 +508,52 @@ elif page == "🛍️ Product Performance":
     st.divider()
 
     # --------------------------------------------------------
-    # REVENUE BY PRODUCT
+    # PRODUCT SELECTOR
+    # --------------------------------------------------------
+
+    selected_product = st.selectbox(
+        "Select a product",
+        options=product_analysis["product_name"].tolist()
+    )
+
+    selected_product_data = product_analysis[
+        product_analysis["product_name"] == selected_product
+    ].iloc[0]
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+
+        st.metric(
+            "Units Sold",
+            f"{int(selected_product_data['units_sold']):,}"
+        )
+
+    with col2:
+
+        st.metric(
+            "Revenue",
+            f"${selected_product_data['revenue']:,.2f}"
+        )
+
+    with col3:
+
+        st.metric(
+            "Gross Profit",
+            f"${selected_product_data['gross_profit']:,.2f}"
+        )
+
+    with col4:
+
+        st.metric(
+            "Gross Margin",
+            f"{selected_product_data['gross_margin_pct']:.2f}%"
+        )
+
+    st.divider()
+
+    # --------------------------------------------------------
+    # REVENUE
     # --------------------------------------------------------
 
     fig = px.bar(
@@ -488,13 +561,19 @@ elif page == "🛍️ Product Performance":
         x="product_name",
         y="revenue",
         title="Revenue by Product",
-        text_auto=".2s"
+        text_auto=".2s",
+        hover_data=[
+            "units_sold",
+            "cogs",
+            "gross_profit",
+            "gross_margin_pct"
+        ]
     )
 
     fig.update_layout(
+        hovermode="x unified",
         xaxis_title="Product",
-        yaxis_title="Revenue",
-        showlegend=False
+        yaxis_title="Revenue"
     )
 
     st.plotly_chart(
@@ -511,13 +590,18 @@ elif page == "🛍️ Product Performance":
         x="product_name",
         y="units_sold",
         title="Units Sold by Product",
-        text_auto=True
+        text_auto=True,
+        hover_data=[
+            "revenue",
+            "gross_profit",
+            "gross_margin_pct"
+        ]
     )
 
     fig.update_layout(
+        hovermode="x unified",
         xaxis_title="Product",
-        yaxis_title="Units Sold",
-        showlegend=False
+        yaxis_title="Units Sold"
     )
 
     st.plotly_chart(
@@ -534,13 +618,45 @@ elif page == "🛍️ Product Performance":
         x="product_name",
         y="gross_profit",
         title="Gross Profit by Product",
-        text_auto=".2s"
+        text_auto=".2s",
+        hover_data=[
+            "revenue",
+            "cogs",
+            "gross_margin_pct"
+        ]
     )
 
     fig.update_layout(
+        hovermode="x unified",
         xaxis_title="Product",
-        yaxis_title="Gross Profit",
-        showlegend=False
+        yaxis_title="Gross Profit"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    # --------------------------------------------------------
+    # GROSS MARGIN
+    # --------------------------------------------------------
+
+    fig = px.bar(
+        product_analysis,
+        x="product_name",
+        y="gross_margin_pct",
+        title="Gross Margin by Product",
+        text_auto=".2f",
+        hover_data=[
+            "revenue",
+            "gross_profit"
+        ]
+    )
+
+    fig.update_layout(
+        hovermode="x unified",
+        xaxis_title="Product",
+        yaxis_title="Gross Margin (%)"
     )
 
     st.plotly_chart(
@@ -559,10 +675,6 @@ elif page == "💰 Refund Analysis":
         "💰 Refund Analysis"
     )
 
-    # --------------------------------------------------------
-    # REFUND TABLE
-    # --------------------------------------------------------
-
     st.subheader(
         "Refund Summary"
     )
@@ -576,6 +688,44 @@ elif page == "💰 Refund Analysis":
     st.divider()
 
     # --------------------------------------------------------
+    # PRODUCT FILTER
+    # --------------------------------------------------------
+
+    selected_product = st.selectbox(
+        "Select product",
+        options=refund_analysis["product_name"].tolist()
+    )
+
+    selected_refund = refund_analysis[
+        refund_analysis["product_name"] == selected_product
+    ].iloc[0]
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+
+        st.metric(
+            "Revenue",
+            f"${selected_refund['revenue']:,.2f}"
+        )
+
+    with col2:
+
+        st.metric(
+            "Refund Amount",
+            f"${selected_refund['refund_amount']:,.2f}"
+        )
+
+    with col3:
+
+        st.metric(
+            "Refund Rate",
+            f"{selected_refund['refund_rate_pct']:.2f}%"
+        )
+
+    st.divider()
+
+    # --------------------------------------------------------
     # REFUND AMOUNT
     # --------------------------------------------------------
 
@@ -584,13 +734,18 @@ elif page == "💰 Refund Analysis":
         x="product_name",
         y="refund_amount",
         title="Refund Amount by Product",
-        text_auto=".2s"
+        text_auto=".2s",
+        hover_data=[
+            "revenue",
+            "refund_count",
+            "refund_rate_pct"
+        ]
     )
 
     fig.update_layout(
+        hovermode="x unified",
         xaxis_title="Product",
-        yaxis_title="Refund Amount",
-        showlegend=False
+        yaxis_title="Refund Amount"
     )
 
     st.plotly_chart(
@@ -607,13 +762,45 @@ elif page == "💰 Refund Analysis":
         x="product_name",
         y="refund_rate_pct",
         title="Refund Rate by Product",
-        text_auto=".2f"
+        text_auto=".2f",
+        hover_data=[
+            "revenue",
+            "refund_amount",
+            "refund_count"
+        ]
     )
 
     fig.update_layout(
+        hovermode="x unified",
         xaxis_title="Product",
-        yaxis_title="Refund Rate (%)",
-        showlegend=False
+        yaxis_title="Refund Rate (%)"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    # --------------------------------------------------------
+    # REFUND COUNT
+    # --------------------------------------------------------
+
+    fig = px.bar(
+        refund_analysis,
+        x="product_name",
+        y="refund_count",
+        title="Refund Count by Product",
+        text_auto=True,
+        hover_data=[
+            "refund_amount",
+            "refund_rate_pct"
+        ]
+    )
+
+    fig.update_layout(
+        hovermode="x unified",
+        xaxis_title="Product",
+        yaxis_title="Refund Count"
     )
 
     st.plotly_chart(
@@ -632,10 +819,6 @@ elif page == "📢 Marketing Performance":
         "📢 Marketing Performance"
     )
 
-    # --------------------------------------------------------
-    # TABLE
-    # --------------------------------------------------------
-
     st.subheader(
         "Marketing Channel Performance"
     )
@@ -649,7 +832,48 @@ elif page == "📢 Marketing Performance":
     st.divider()
 
     # --------------------------------------------------------
-    # REVENUE BY SOURCE
+    # SOURCE FILTER
+    # --------------------------------------------------------
+
+    selected_source = st.selectbox(
+        "Select marketing source",
+        options=marketing_analysis[
+            "reporting_utm_source"
+        ].tolist()
+    )
+
+    selected_marketing = marketing_analysis[
+        marketing_analysis["reporting_utm_source"]
+        == selected_source
+    ].iloc[0]
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+
+        st.metric(
+            "Sessions",
+            f"{int(selected_marketing['sessions']):,}"
+        )
+
+    with col2:
+
+        st.metric(
+            "Revenue",
+            f"${selected_marketing['revenue']:,.2f}"
+        )
+
+    with col3:
+
+        st.metric(
+            "Conversion Rate",
+            f"{selected_marketing['conversion_rate_pct']:.2f}%"
+        )
+
+    st.divider()
+
+    # --------------------------------------------------------
+    # REVENUE
     # --------------------------------------------------------
 
     fig = px.bar(
@@ -657,13 +881,19 @@ elif page == "📢 Marketing Performance":
         x="reporting_utm_source",
         y="revenue",
         title="Revenue by Marketing Source",
-        text_auto=".2s"
+        text_auto=".2s",
+        hover_data=[
+            "sessions",
+            "converted_sessions",
+            "conversion_rate_pct",
+            "revenue_per_session"
+        ]
     )
 
     fig.update_layout(
+        hovermode="x unified",
         xaxis_title="Marketing Source",
-        yaxis_title="Revenue",
-        showlegend=False
+        yaxis_title="Revenue"
     )
 
     st.plotly_chart(
@@ -680,13 +910,47 @@ elif page == "📢 Marketing Performance":
         x="reporting_utm_source",
         y="conversion_rate_pct",
         title="Conversion Rate by Marketing Source",
-        text_auto=".2f"
+        text_auto=".2f",
+        hover_data=[
+            "sessions",
+            "converted_sessions",
+            "revenue",
+            "revenue_per_session"
+        ]
     )
 
     fig.update_layout(
+        hovermode="x unified",
         xaxis_title="Marketing Source",
-        yaxis_title="Conversion Rate (%)",
-        showlegend=False
+        yaxis_title="Conversion Rate (%)"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    # --------------------------------------------------------
+    # REVENUE PER SESSION
+    # --------------------------------------------------------
+
+    fig = px.bar(
+        marketing_analysis,
+        x="reporting_utm_source",
+        y="revenue_per_session",
+        title="Revenue per Session by Marketing Source",
+        text_auto=".2f",
+        hover_data=[
+            "sessions",
+            "revenue",
+            "conversion_rate_pct"
+        ]
+    )
+
+    fig.update_layout(
+        hovermode="x unified",
+        xaxis_title="Marketing Source",
+        yaxis_title="Revenue per Session"
     )
 
     st.plotly_chart(
@@ -705,10 +969,6 @@ elif page == "📱 Device Performance":
         "📱 Device Performance"
     )
 
-    # --------------------------------------------------------
-    # DEVICE TABLE
-    # --------------------------------------------------------
-
     st.subheader(
         "Device Performance Summary"
     )
@@ -722,7 +982,48 @@ elif page == "📱 Device Performance":
     st.divider()
 
     # --------------------------------------------------------
-    # SESSIONS BY DEVICE
+    # DEVICE FILTER
+    # --------------------------------------------------------
+
+    selected_device = st.selectbox(
+        "Select device",
+        options=device_analysis[
+            "reporting_device_type"
+        ].tolist()
+    )
+
+    selected_device_data = device_analysis[
+        device_analysis["reporting_device_type"]
+        == selected_device
+    ].iloc[0]
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+
+        st.metric(
+            "Sessions",
+            f"{int(selected_device_data['sessions']):,}"
+        )
+
+    with col2:
+
+        st.metric(
+            "Revenue",
+            f"${selected_device_data['revenue']:,.2f}"
+        )
+
+    with col3:
+
+        st.metric(
+            "Conversion Rate",
+            f"{selected_device_data['conversion_rate_pct']:.2f}%"
+        )
+
+    st.divider()
+
+    # --------------------------------------------------------
+    # SESSIONS
     # --------------------------------------------------------
 
     fig = px.bar(
@@ -730,13 +1031,19 @@ elif page == "📱 Device Performance":
         x="reporting_device_type",
         y="sessions",
         title="Sessions by Device",
-        text_auto=True
+        text_auto=True,
+        hover_data=[
+            "converted_sessions",
+            "revenue",
+            "conversion_rate_pct",
+            "revenue_per_session"
+        ]
     )
 
     fig.update_layout(
+        hovermode="x unified",
         xaxis_title="Device",
-        yaxis_title="Sessions",
-        showlegend=False
+        yaxis_title="Sessions"
     )
 
     st.plotly_chart(
@@ -745,7 +1052,7 @@ elif page == "📱 Device Performance":
     )
 
     # --------------------------------------------------------
-    # CONVERSION RATE BY DEVICE
+    # CONVERSION RATE
     # --------------------------------------------------------
 
     fig = px.bar(
@@ -753,13 +1060,46 @@ elif page == "📱 Device Performance":
         x="reporting_device_type",
         y="conversion_rate_pct",
         title="Conversion Rate by Device",
-        text_auto=".2f"
+        text_auto=".2f",
+        hover_data=[
+            "sessions",
+            "converted_sessions",
+            "revenue"
+        ]
     )
 
     fig.update_layout(
+        hovermode="x unified",
         xaxis_title="Device",
-        yaxis_title="Conversion Rate (%)",
-        showlegend=False
+        yaxis_title="Conversion Rate (%)"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    # --------------------------------------------------------
+    # REVENUE
+    # --------------------------------------------------------
+
+    fig = px.bar(
+        device_analysis,
+        x="reporting_device_type",
+        y="revenue",
+        title="Revenue by Device",
+        text_auto=".2s",
+        hover_data=[
+            "sessions",
+            "conversion_rate_pct",
+            "revenue_per_session"
+        ]
+    )
+
+    fig.update_layout(
+        hovermode="x unified",
+        xaxis_title="Device",
+        yaxis_title="Revenue"
     )
 
     st.plotly_chart(
@@ -778,10 +1118,6 @@ elif page == "🔁 Customer Sessions":
         "🔁 Customer Session Analysis"
     )
 
-    # --------------------------------------------------------
-    # TABLE
-    # --------------------------------------------------------
-
     st.subheader(
         "Repeat vs Non-Repeat Sessions"
     )
@@ -795,21 +1131,91 @@ elif page == "🔁 Customer Sessions":
     st.divider()
 
     # --------------------------------------------------------
+    # SESSION TYPE FILTER
+    # --------------------------------------------------------
+
+    selected_session_type = st.selectbox(
+        "Select session type",
+        options=repeat_session_analysis[
+            "is_repeat_session"
+        ].tolist(),
+        format_func=lambda x: (
+            "Repeat Session"
+            if x == 1
+            else "New Session"
+        )
+    )
+
+    selected_session = repeat_session_analysis[
+        repeat_session_analysis["is_repeat_session"]
+        == selected_session_type
+    ].iloc[0]
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+
+        st.metric(
+            "Sessions",
+            f"{int(selected_session['sessions']):,}"
+        )
+
+    with col2:
+
+        st.metric(
+            "Converted Sessions",
+            f"{int(selected_session['converted_sessions']):,}"
+        )
+
+    with col3:
+
+        st.metric(
+            "Conversion Rate",
+            f"{selected_session['conversion_rate_pct']:.2f}%"
+        )
+
+    with col4:
+
+        st.metric(
+            "Revenue / Session",
+            f"${selected_session['revenue_per_session']:.2f}"
+        )
+
+    st.divider()
+
+    # --------------------------------------------------------
     # SESSION DISTRIBUTION
     # --------------------------------------------------------
 
+    session_chart = repeat_session_analysis.copy()
+
+    session_chart["Session Type"] = session_chart[
+        "is_repeat_session"
+    ].map(
+        {
+            0: "New Session",
+            1: "Repeat Session"
+        }
+    )
+
     fig = px.bar(
-        repeat_session_analysis,
-        x="is_repeat_session",
+        session_chart,
+        x="Session Type",
         y="sessions",
         title="Sessions by Customer Type",
-        text_auto=True
+        text_auto=True,
+        hover_data=[
+            "converted_sessions",
+            "conversion_rate_pct",
+            "revenue",
+            "revenue_per_session"
+        ]
     )
 
     fig.update_layout(
-        xaxis_title="Repeat Session",
-        yaxis_title="Sessions",
-        showlegend=False
+        hovermode="x unified",
+        xaxis_title="Customer Type",
+        yaxis_title="Sessions"
     )
 
     st.plotly_chart(
@@ -822,17 +1228,22 @@ elif page == "🔁 Customer Sessions":
     # --------------------------------------------------------
 
     fig = px.bar(
-        repeat_session_analysis,
-        x="is_repeat_session",
+        session_chart,
+        x="Session Type",
         y="conversion_rate_pct",
         title="Conversion Rate by Customer Type",
-        text_auto=".2f"
+        text_auto=".2f",
+        hover_data=[
+            "sessions",
+            "converted_sessions",
+            "revenue"
+        ]
     )
 
     fig.update_layout(
-        xaxis_title="Repeat Session",
-        yaxis_title="Conversion Rate (%)",
-        showlegend=False
+        hovermode="x unified",
+        xaxis_title="Customer Type",
+        yaxis_title="Conversion Rate (%)"
     )
 
     st.plotly_chart(
@@ -845,17 +1256,22 @@ elif page == "🔁 Customer Sessions":
     # --------------------------------------------------------
 
     fig = px.bar(
-        repeat_session_analysis,
-        x="is_repeat_session",
+        session_chart,
+        x="Session Type",
         y="revenue_per_session",
-        title="Revenue per Session",
-        text_auto=".2f"
+        title="Revenue per Session by Customer Type",
+        text_auto=".2f",
+        hover_data=[
+            "sessions",
+            "revenue",
+            "conversion_rate_pct"
+        ]
     )
 
     fig.update_layout(
-        xaxis_title="Repeat Session",
-        yaxis_title="Revenue per Session",
-        showlegend=False
+        hovermode="x unified",
+        xaxis_title="Customer Type",
+        yaxis_title="Revenue per Session"
     )
 
     st.plotly_chart(
@@ -907,6 +1323,39 @@ elif page == "🤖 ML Model":
     st.divider()
 
     # --------------------------------------------------------
+    # MODEL PERFORMANCE CHART
+    # --------------------------------------------------------
+
+    performance_chart = model_performance.copy()
+
+    performance_chart["Score"] = pd.to_numeric(
+        performance_chart["Score"],
+        errors="coerce"
+    )
+
+    fig = px.bar(
+        performance_chart,
+        x="Metric",
+        y="Score",
+        title="Model Performance Metrics",
+        text_auto=".3f",
+        hover_data=["Score"]
+    )
+
+    fig.update_layout(
+        hovermode="x unified",
+        xaxis_title="Metric",
+        yaxis_title="Score"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    st.divider()
+
+    # --------------------------------------------------------
     # HISTORICAL PREDICTION RESULTS
     # --------------------------------------------------------
 
@@ -919,7 +1368,9 @@ elif page == "🤖 ML Model":
     with col1:
 
         actual_count = (
-            prediction_results["actual_conversion"]
+            prediction_results[
+                "actual_conversion"
+            ]
             .value_counts()
             .reset_index()
         )
@@ -934,7 +1385,14 @@ elif page == "🤖 ML Model":
             x="conversion",
             y="count",
             title="Actual Conversion Distribution",
-            text_auto=True
+            text_auto=True,
+            hover_data=["count"]
+        )
+
+        fig.update_layout(
+            hovermode="x unified",
+            xaxis_title="Conversion",
+            yaxis_title="Sessions"
         )
 
         st.plotly_chart(
@@ -945,7 +1403,9 @@ elif page == "🤖 ML Model":
     with col2:
 
         predicted_count = (
-            prediction_results["predicted_conversion"]
+            prediction_results[
+                "predicted_conversion"
+            ]
             .value_counts()
             .reset_index()
         )
@@ -960,7 +1420,14 @@ elif page == "🤖 ML Model":
             x="conversion",
             y="count",
             title="Predicted Conversion Distribution",
-            text_auto=True
+            text_auto=True,
+            hover_data=["count"]
+        )
+
+        fig.update_layout(
+            hovermode="x unified",
+            xaxis_title="Conversion",
+            yaxis_title="Sessions"
         )
 
         st.plotly_chart(
@@ -969,7 +1436,7 @@ elif page == "🤖 ML Model":
         )
 
     # --------------------------------------------------------
-    # PREDICTION PROBABILITY
+    # PROBABILITY DISTRIBUTION
     # --------------------------------------------------------
 
     st.subheader(
@@ -980,10 +1447,15 @@ elif page == "🤖 ML Model":
         prediction_results,
         x="conversion_probability",
         nbins=30,
-        title="Predicted Conversion Probability"
+        title="Predicted Conversion Probability",
+        marginal="box",
+        hover_data=[
+            "conversion_probability"
+        ]
     )
 
     fig.update_layout(
+        hovermode="x unified",
         xaxis_title="Conversion Probability",
         yaxis_title="Number of Sessions"
     )
@@ -1006,13 +1478,18 @@ elif page == "🤖 ML Model":
     if model is None:
 
         st.warning(
-            "Live prediction is unavailable because the model could not be loaded."
+            "Live prediction is unavailable because "
+            "the model could not be loaded."
         )
 
     else:
 
         st.markdown(
-            "Enter session information to predict the probability of conversion."
+            """
+            Enter session information below and the trained
+            machine learning model will predict the probability
+            that the session will convert.
+            """
         )
 
         col1, col2 = st.columns(2)
@@ -1123,13 +1600,15 @@ elif page == "🤖 ML Model":
             )
 
         # ----------------------------------------------------
-        # PREDICTION BUTTON
+        # PREDICT BUTTON
         # ----------------------------------------------------
 
-        if st.button(
+        predict_clicked = st.button(
             "🚀 Predict Conversion",
             use_container_width=True
-        ):
+        )
+
+        if predict_clicked:
 
             input_data = pd.DataFrame(
                 {
@@ -1185,30 +1664,219 @@ elif page == "🤖 ML Model":
                     input_data
                 )[0][1]
 
-                st.divider()
-
-                if prediction == 1:
-
-                    st.success(
-                        "🎉 Prediction: Session is likely to CONVERT"
-                    )
-
-                else:
-
-                    st.warning(
-                        "Prediction: Session is unlikely to convert"
-                    )
-
-                st.metric(
-                    "Conversion Probability",
-                    f"{probability * 100:.2f}%"
+                probability_percentage = (
+                    probability * 100
                 )
+
+                st.session_state[
+                    "last_prediction"
+                ] = int(prediction)
+
+                st.session_state[
+                    "last_probability"
+                ] = probability_percentage
 
             except Exception as e:
 
                 st.error(
                     f"Prediction failed: {e}"
                 )
+
+        # ----------------------------------------------------
+        # SHOW PREDICTION RESULT
+        # ----------------------------------------------------
+
+        if "last_prediction" in st.session_state:
+
+            prediction = st.session_state[
+                "last_prediction"
+            ]
+
+            probability_percentage = (
+                st.session_state[
+                    "last_probability"
+                ]
+            )
+
+            st.divider()
+
+            # ------------------------------------------------
+            # RESULT
+            # ------------------------------------------------
+
+            if prediction == 1:
+
+                st.success(
+                    "🎉 Prediction: Session is likely to CONVERT"
+                )
+
+            else:
+
+                st.warning(
+                    "Prediction: Session is unlikely to convert"
+                )
+
+            st.metric(
+                "Conversion Probability",
+                f"{probability_percentage:.2f}%"
+            )
+
+            st.divider()
+
+            # =================================================
+            # SPEEDOMETER / GAUGE
+            # =================================================
+
+            st.subheader(
+                "🎯 Conversion Probability Speedometer"
+            )
+
+            gauge_fig = go.Figure(
+                go.Indicator(
+                    mode="gauge+number",
+                    value=probability_percentage,
+                    number={
+                        "suffix": "%",
+                        "font": {
+                            "size": 42
+                        }
+                    },
+                    title={
+                        "text": "Predicted Conversion Probability"
+                    },
+                    gauge={
+                        "axis": {
+                            "range": [
+                                0,
+                                100
+                            ],
+                            "ticksuffix": "%"
+                        },
+
+                        "bar": {
+                            "color": "#2563EB"
+                        },
+
+                        "steps": [
+                            {
+                                "range": [
+                                    0,
+                                    30
+                                ],
+                                "color": "#FEE2E2"
+                            },
+                            {
+                                "range": [
+                                    30,
+                                    70
+                                ],
+                                "color": "#FEF3C7"
+                            },
+                            {
+                                "range": [
+                                    70,
+                                    100
+                                ],
+                                "color": "#DCFCE7"
+                            }
+                        ],
+
+                        "threshold": {
+                            "line": {
+                                "color": "#111827",
+                                "width": 4
+                            },
+                            "thickness": 0.75,
+                            "value": probability_percentage
+                        }
+                    }
+                )
+            )
+
+            gauge_fig.update_layout(
+                height=400,
+                margin=dict(
+                    l=40,
+                    r=40,
+                    t=80,
+                    b=20
+                )
+            )
+
+            st.plotly_chart(
+                gauge_fig,
+                use_container_width=True
+            )
+
+            # ------------------------------------------------
+            # INTERPRETATION
+            # ------------------------------------------------
+
+            if probability_percentage < 30:
+
+                st.info(
+                    "📉 Low predicted conversion probability."
+                )
+
+            elif probability_percentage < 70:
+
+                st.info(
+                    "📊 Moderate predicted conversion probability."
+                )
+
+            else:
+
+                st.success(
+                    "📈 High predicted conversion probability."
+                )
+
+            # ------------------------------------------------
+            # INPUT SUMMARY
+            # ------------------------------------------------
+
+            st.subheader(
+                "Prediction Input Summary"
+            )
+
+            input_summary = pd.DataFrame(
+                {
+                    "Feature": [
+                        "Repeat Session",
+                        "UTM Source",
+                        "UTM Campaign",
+                        "UTM Content",
+                        "Device Type",
+                        "HTTP Referer",
+                        "Session Hour",
+                        "Day of Week",
+                        "Session Month",
+                        "Session Year"
+                    ],
+
+                    "Value": [
+                        (
+                            "Yes"
+                            if is_repeat_session == 1
+                            else "No"
+                        ),
+                        reporting_utm_source,
+                        utm_campaign,
+                        utm_content,
+                        reporting_device_type,
+                        http_referer,
+                        session_hour,
+                        day_of_week,
+                        session_month,
+                        session_year
+                    ]
+                }
+            )
+
+            st.dataframe(
+                input_summary,
+                use_container_width=True,
+                hide_index=True
+            )
 
 
 # ============================================================
