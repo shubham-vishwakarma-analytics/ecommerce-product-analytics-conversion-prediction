@@ -95,7 +95,7 @@ def load_model():
 
 
 # ============================================================
-# LOAD DATA AND MODEL
+# LOAD DATA
 # ============================================================
 
 try:
@@ -120,6 +120,10 @@ except Exception as e:
     st.stop()
 
 
+# ============================================================
+# LOAD MODEL
+# ============================================================
+
 try:
 
     model = load_model()
@@ -129,6 +133,7 @@ try:
 except Exception as e:
 
     model = None
+
     model_loaded = False
 
     st.warning(
@@ -182,54 +187,182 @@ if page == "📊 Business Overview":
 
     st.header("📊 Business Overview")
 
+
+    # --------------------------------------------------------
+    # Prepare metric dictionary
+    # --------------------------------------------------------
+
     metrics = {}
 
     for _, row in business_summary.iterrows():
 
-        metrics[str(row["Metric"])] = row["Value"]
+        metric_name = str(row["Metric"]).strip().lower()
+
+        metric_value = row["Value"]
+
+        metrics[metric_name] = metric_value
 
 
-    # KPI values
-    total_sessions = metrics.get("Total Sessions", 0)
-    total_revenue = metrics.get("Total Revenue", 0)
-    total_orders = metrics.get("Total Orders", 0)
-    conversion_rate = metrics.get("Conversion Rate", 0)
+    # --------------------------------------------------------
+    # Helper function
+    # --------------------------------------------------------
 
+    def get_metric_value(possible_names, default=0):
+
+        for name in possible_names:
+
+            normalized_name = name.strip().lower()
+
+            if normalized_name in metrics:
+
+                value = metrics[normalized_name]
+
+                try:
+
+                    if pd.isna(value):
+                        return default
+
+                except TypeError:
+                    pass
+
+                try:
+
+                    value_string = (
+                        str(value)
+                        .replace(",", "")
+                        .replace("$", "")
+                        .replace("₹", "")
+                        .replace("%", "")
+                        .strip()
+                    )
+
+                    return float(value_string)
+
+                except (ValueError, TypeError):
+
+                    return value
+
+        return default
+
+
+    # --------------------------------------------------------
+    # KPI Values
+    # --------------------------------------------------------
+
+    total_sessions = get_metric_value(
+        [
+            "total sessions",
+            "sessions",
+            "total session"
+        ]
+    )
+
+    total_revenue = get_metric_value(
+        [
+            "total revenue",
+            "revenue",
+            "total revenue ($)",
+            "total revenue usd",
+            "revenue ($)"
+        ]
+    )
+
+    total_orders = get_metric_value(
+        [
+            "total orders",
+            "orders",
+            "total order"
+        ]
+    )
+
+    conversion_rate = get_metric_value(
+        [
+            "conversion rate",
+            "conversion rate (%)",
+            "conversion rate %",
+            "conversion rate percent"
+        ]
+    )
+
+
+    # --------------------------------------------------------
+    # KPI Cards
+    # --------------------------------------------------------
 
     col1, col2, col3, col4 = st.columns(4)
 
+
     with col1:
-        st.metric(
-            "Total Sessions",
-            f"{total_sessions:,.0f}"
-            if isinstance(total_sessions, (int, float, np.number))
-            else total_sessions
-        )
+
+        if isinstance(total_sessions, (int, float, np.number)):
+
+            st.metric(
+                "Total Sessions",
+                f"{total_sessions:,.0f}"
+            )
+
+        else:
+
+            st.metric(
+                "Total Sessions",
+                total_sessions
+            )
+
 
     with col2:
-        st.metric(
-            "Total Revenue",
-            f"${total_revenue:,.2f}"
-            if isinstance(total_revenue, (int, float, np.number))
-            else total_revenue
-        )
+
+        if isinstance(total_revenue, (int, float, np.number)):
+
+            st.metric(
+                "Total Revenue",
+                f"${total_revenue:,.2f}"
+            )
+
+        else:
+
+            st.metric(
+                "Total Revenue",
+                total_revenue
+            )
+
 
     with col3:
-        st.metric(
-            "Total Orders",
-            f"{total_orders:,.0f}"
-            if isinstance(total_orders, (int, float, np.number))
-            else total_orders
-        )
+
+        if isinstance(total_orders, (int, float, np.number)):
+
+            st.metric(
+                "Total Orders",
+                f"{total_orders:,.0f}"
+            )
+
+        else:
+
+            st.metric(
+                "Total Orders",
+                total_orders
+            )
+
 
     with col4:
-        st.metric(
-            "Conversion Rate",
-            f"{conversion_rate:.2f}%"
-            if isinstance(conversion_rate, (int, float, np.number))
-            else conversion_rate
-        )
 
+        if isinstance(conversion_rate, (int, float, np.number)):
+
+            st.metric(
+                "Conversion Rate",
+                f"{conversion_rate:.2f}%"
+            )
+
+        else:
+
+            st.metric(
+                "Conversion Rate",
+                conversion_rate
+            )
+
+
+    # --------------------------------------------------------
+    # Business Summary Table
+    # --------------------------------------------------------
 
     st.subheader("Business Summary")
 
@@ -248,7 +381,9 @@ elif page == "🛍️ Product Performance":
 
     st.header("🛍️ Product Performance")
 
+
     col1, col2 = st.columns(2)
+
 
     with col1:
 
@@ -264,6 +399,7 @@ elif page == "🛍️ Product Performance":
             fig,
             use_container_width=True
         )
+
 
     with col2:
 
@@ -312,7 +448,9 @@ elif page == "💰 Refund Analysis":
 
     st.header("💰 Refund Analysis")
 
+
     col1, col2 = st.columns(2)
+
 
     with col1:
 
@@ -328,6 +466,7 @@ elif page == "💰 Refund Analysis":
             fig,
             use_container_width=True
         )
+
 
     with col2:
 
@@ -362,7 +501,9 @@ elif page == "📢 Marketing Performance":
 
     st.header("📢 Marketing Performance")
 
+
     col1, col2 = st.columns(2)
+
 
     with col1:
 
@@ -378,6 +519,7 @@ elif page == "📢 Marketing Performance":
             fig,
             use_container_width=True
         )
+
 
     with col2:
 
@@ -426,7 +568,9 @@ elif page == "📱 Device Performance":
 
     st.header("📱 Device Performance")
 
+
     col1, col2 = st.columns(2)
+
 
     with col1:
 
@@ -442,6 +586,7 @@ elif page == "📱 Device Performance":
             fig,
             use_container_width=True
         )
+
 
     with col2:
 
@@ -490,7 +635,9 @@ elif page == "🔁 Customer Sessions":
 
     st.header("🔁 Customer Session Analysis")
 
+
     col1, col2 = st.columns(2)
+
 
     with col1:
 
@@ -506,6 +653,7 @@ elif page == "🔁 Customer Sessions":
             fig,
             use_container_width=True
         )
+
 
     with col2:
 
@@ -573,7 +721,7 @@ elif page == "🤖 ML Model":
 
 
     # --------------------------------------------------------
-    # Historical Model Performance
+    # Model Performance
     # --------------------------------------------------------
 
     st.subheader("📈 Model Performance")
@@ -591,7 +739,9 @@ elif page == "🤖 ML Model":
 
     st.subheader("📊 Historical Prediction Results")
 
+
     col1, col2 = st.columns(2)
+
 
     with col1:
 
@@ -618,6 +768,7 @@ elif page == "🤖 ML Model":
             fig,
             use_container_width=True
         )
+
 
     with col2:
 
@@ -664,12 +815,13 @@ elif page == "🤖 ML Model":
 
 
     # --------------------------------------------------------
-    # Live Prediction
+    # LIVE PREDICTION
     # --------------------------------------------------------
 
     st.divider()
 
     st.subheader("🔮 Live Conversion Prediction")
+
 
     if not model_loaded:
 
@@ -677,12 +829,14 @@ elif page == "🤖 ML Model":
             "Live prediction is unavailable because the ML model could not be loaded."
         )
 
+
     else:
 
         col1, col2 = st.columns(2)
 
+
         # ----------------------------------------------------
-        # Column 1
+        # INPUT COLUMN 1
         # ----------------------------------------------------
 
         with col1:
@@ -691,6 +845,7 @@ elif page == "🤖 ML Model":
                 "Repeat Session",
                 ["No", "Yes"]
             )
+
 
             utm_source_options = sorted(
                 prediction_results[
@@ -701,6 +856,7 @@ elif page == "🤖 ML Model":
                 .unique()
                 .tolist()
             )
+
 
             utm_source = st.selectbox(
                 "UTM Source",
@@ -717,6 +873,7 @@ elif page == "🤖 ML Model":
                 .unique()
                 .tolist()
             )
+
 
             device_type = st.selectbox(
                 "Device Type",
@@ -741,7 +898,7 @@ elif page == "🤖 ML Model":
 
 
         # ----------------------------------------------------
-        # Column 2
+        # INPUT COLUMN 2
         # ----------------------------------------------------
 
         with col2:
@@ -755,6 +912,7 @@ elif page == "🤖 ML Model":
                 .unique()
                 .tolist()
             )
+
 
             campaign = st.selectbox(
                 "UTM Campaign",
@@ -772,6 +930,7 @@ elif page == "🤖 ML Model":
                 .tolist()
             )
 
+
             content = st.selectbox(
                 "UTM Content",
                 ["None"] + content_options
@@ -787,6 +946,7 @@ elif page == "🤖 ML Model":
                 .unique()
                 .tolist()
             )
+
 
             referer = st.selectbox(
                 "HTTP Referer",
@@ -811,7 +971,7 @@ elif page == "🤖 ML Model":
 
 
         # ----------------------------------------------------
-        # Prepare Input
+        # PREPARE INPUT DATA
         # ----------------------------------------------------
 
         input_data = pd.DataFrame(
@@ -860,7 +1020,7 @@ elif page == "🤖 ML Model":
 
 
         # ----------------------------------------------------
-        # Prediction Button
+        # PREDICTION
         # ----------------------------------------------------
 
         if st.button(
@@ -873,6 +1033,7 @@ elif page == "🤖 ML Model":
                 prediction = model.predict(
                     input_data
                 )[0]
+
 
                 probability = model.predict_proba(
                     input_data
@@ -901,8 +1062,6 @@ elif page == "🤖 ML Model":
                 )
 
 
-                # Probability gauge
-
                 fig = go.Figure(
                     go.Indicator(
                         mode="gauge+number",
@@ -917,6 +1076,7 @@ elif page == "🤖 ML Model":
                         }
                     )
                 )
+
 
                 st.plotly_chart(
                     fig,
