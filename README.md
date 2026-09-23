@@ -1,397 +1,438 @@
 # E-Commerce Product Analytics & Conversion Prediction
 
-> **End-to-end SQL Server + Python + Machine Learning + Power BI analytics project** 
+> End-to-end e-commerce analytics project using SQL Server, T-SQL, Python, Machine Learning, Power BI, and GitHub.
 
-![Project Analytics](screenshots/business_reconmedation.png)
+![E-Commerce Analytics Overview](screenshots/business_reconmedation.png)
 
-**Author:** Shubham Vishwakarma  
-**Stack:** SQL Server · T-SQL · Python · Pandas · NumPy · Scikit-learn · Jupyter · Power BI
+**Author:** Shubham Vishwakarma
 
----
+**Project Type:** End-to-End Data Analytics & Machine Learning
 
-##  Project at a Glance
-
-This project transforms raw e-commerce data into validated KPIs, business insights, interactive dashboards, and a first-pass machine-learning model for session conversion prediction.
-
-### Key business metrics
-
-| KPI | Result |
-|---|---:|
-| Gross Revenue | **$1.94M** |
-| Net Revenue | **$1.85M** |
-| Total Orders | **32,313** |
-| Total Sessions | **472,871** |
-| Conversion Rate | **6.83%** |
-| Average Order Value | **$59.99** |
-| Gross Margin | **62.74%** |
-| Refund % of Revenue | **4.40%** |
-
-### Headline findings
-
-- **The Original Mr. Fuzzy** contributes approximately **62% of total revenue**.
-- Mobile conversion is **3.09%** versus **8.50%** on desktop.
-- Repeat sessions convert at **7.83%** versus **6.64%** for new sessions.
-- Marketing performance should be evaluated using conversion and revenue per session, not traffic volume alone.
-- Refund dollars are concentrated in the highest-volume product.
-- Session volume has declined since late 2014, contributing to lower order volume.
+**Domain:** E-Commerce / Digital Analytics
 
 ---
 
-##  Project Visual Gallery
+## Project Overview
 
-All project visuals are included below. The gallery intentionally appears near the beginning so a recruiter or reviewer can understand the project visually before reading the detailed methodology.
+E-Commerce Product Analytics & Conversion Prediction is an end-to-end analytics project that transforms raw e-commerce data into validated business KPIs, analytical datasets, interactive Power BI dashboards, and a machine-learning model for website session conversion prediction.
 
-| ![Executive Overview](screenshots/Executive-Overview.png) |
-| ![Business Reconmedation](screenshots/business_reconmedation.png) | ![Conversiongap By Device And Repeat Status](screenshots/conversiongap_by_device_and_repeat_status.png) |
-|---|---|
-| ![Conversion Rate By Device Python Visualization](screenshots/Conversion_rate_by_device_Python_Visualization.png) | ![Customer Order Frequency By Sql](screenshots/customer_order_frequency_By_SQL.png) |
-|---|---|
-| ![Device Analysis Python Code](screenshots/Device_Analysis_Python_code.png) | ![Er Diagram](screenshots/ER-Diagram.png) |
-
- ![Gross Profit By Product Python Visualization](screenshots/Gross_Profit_by_Product_Python_Visualization.png) |
-
-| ![Gross Profit Trend Pthon Visualization](screenshots/Gross_Profit_Trend_Pthon_Visualization.png) | ![Key Business Findings Python Code](screenshots/Key_Business_Findings_Python_code.png) |
-
-
-| ![Maketing & Sessions](screenshots/Maketing&Sessions.png) | ![Marketing Analysis Python Code](screenshots/Marketing_Analysis_Python_Code.png) |
-
-
-| ![Model Prediction](screenshots/Model_prediction.png) |
-
-![Order By Year Python Visualization](screenshots/Order_By_Year_Python_Visualization.png) |
-
-
-| ![Products & Refunds](screenshots/Products&Refunds.png) | ![Product Analysis Python Code](screenshots/Product_Analysis_Python_code.png) |
-|---|---|
-| ![Produt Sales Profit Margin By Sql](screenshots/Produt_sales_profit_margin__By_SQL.png) | ![Refund Analysis Python Code](screenshots/Refund_Analysis_Python_Code.png) |
-|---|---|
-| ![Refund By Product By Sql](screenshots/Refund_by_product_By_SQL.png) | ![Refund Rate By Device Python Visualization](screenshots/Refund_Rate_By_device_Python_Visualization.png) |
-|---|---|
-| ![Repeat Vs New Session Python Code](screenshots/Repeat_vs_New_Session_Python_code.png) | ![Revenue By Product Python Visualization](screenshots/Revenue_By_Product_Python_Visualization.png) |
-
-| ![Sales & Profitability](screenshots/Sales&Profitability.png) | ![Session By Deivce Python Visualization](screenshots/Session_by_Deivce_Python_Visualization.png) |
-|---|---|
-| ![Session By Marketing Source Python Visualization](screenshots/Session_BY_Marketing_Source__Python_Visualization.png) | ![Sql Kpi](screenshots/SQL_KPI.png) |
-|---|---|
-| ![Sql Kpis](screenshots/SQL_KPIs.png) | ![Table Inventory Row Count By Sql](screenshots/Table_Inventory_Row_Count_By_SQL.png) |
-
-
-![Train Test Spiliting And Preprocessing Python Code](screenshots/Train_test_spiliting_and_preprocessing_python_code.png)
-
-
-## 1. Business Problem
-
-The business lacks a unified, data-backed view of performance. Leadership needs to understand:
-
-- Which marketing channels generate valuable traffic?
-- Which devices have stronger conversion performance?
-- Which products drive revenue and gross profit?
-- Where are refunds concentrated?
-- How do repeat and new sessions differ?
-- How has session and order performance changed over time?
-- Can session characteristics provide useful signals for conversion prediction?
-
----
-
-## 2. Project Objectives
-
-- Build a clean and reproducible SQL Server analytical layer.
-- Audit and validate the source data.
-- Create consistent KPI definitions and analytical views.
-- Perform descriptive analysis — **what happened?**
-- Perform diagnostic analysis — **where are the important differences and risks?**
-- Build four Power BI dashboards.
-- Develop a first-pass Logistic Regression conversion model.
-- Evaluate the model honestly, including class imbalance.
-- Translate findings into actionable business recommendations.
-
----
-
-## 3. End-to-End Architecture
+The project covers the complete analytics lifecycle:
 
 ```text
 Raw E-Commerce Data
         ↓
-SQL Server
-Audit → Cleaning → Validation → Analytical Views
+Data Audit & Validation
         ↓
-Python
-EDA → Diagnostic Analysis → Business Findings
+SQL Cleaning & Transformation
+        ↓
+Analytical Views
+        ↓
+Python EDA
+        ↓
+Diagnostic Analysis
         ↓
 Machine Learning
-Logistic Regression → Conversion Prediction → Evaluation
+        ↓
+Power BI Dashboards
+        ↓
+Business Insights
+        ↓
+Recommendations
+
+The analysis focuses on sales performance, website sessions, marketing sources, product profitability, refunds, customer behavior, device performance, repeat sessions, and conversion prediction.
+
+Business Objectives
+#	Objective
+1	Analyze overall e-commerce sales performance
+2	Measure revenue, orders, AOV, gross profit, and gross margin
+3	Analyze website session and conversion performance
+4	Compare conversion performance across devices
+5	Evaluate marketing source and campaign performance
+6	Analyze product revenue and profitability
+7	Identify refund concentration and refund risk
+8	Compare repeat and new-session behavior
+9	Analyze changes in sessions and orders over time
+10	Build a machine-learning model for conversion prediction
+11	Develop interactive Power BI dashboards
+12	Translate analytical findings into business recommendations
+Project at a Glance
+KPI	Result
+Gross Revenue	$1.94M
+Net Revenue	$1.85M
+Total Orders	32,313
+Total Sessions	472,871
+Conversion Rate	6.83%
+Average Order Value	$59.99
+Gross Margin	62.74%
+Refund % of Revenue	4.40%
+End-to-End Workflow
+Raw E-Commerce Data
+        ↓
+SQL Server
+        ↓
+Data Audit
+        ↓
+Data Cleaning
+        ↓
+Data Validation
+        ↓
+KPI Definitions
+        ↓
+Analytical Views
+        ↓
+Python
+    ├── EDA
+    ├── Diagnostic Analysis
+    └── Business Analysis
+        ↓
+Machine Learning
+    └── Logistic Regression
         ↓
 Power BI
-Interactive Dashboards
+    ├── Executive Overview
+    ├── Marketing & Session Funnel
+    ├── Product & Refunds
+    └── Sales & Profitability
         ↓
-Business Insights & Recommendations
-```
-
----
-
-## 4. Data Model
+Business Insights
+        ↓
+Recommendations
+Data Model
 
 The project uses six core source tables:
 
-- `products`
-- `website_sessions`
-- `website_pageviews`
-- `orders`
-- `order_items`
-- `order_item_refunds`
+products
+website_sessions
+website_pageviews
+orders
+order_items
+order_item_refunds
+Entity Relationship Diagram
 
-### Entity Relationship Diagram
+The analytical workflow keeps raw source tables separate from the final analytical views.
 
-![Entity Relationship Diagram](screenshots/ER-Diagram.png)
-
----
-
-## 5. SQL Server Analysis
+dbo Raw Tables
+      ↓
+Cleaning & Validation
+      ↓
+analytics.vw_* Views
+      ↓
+Python + Power BI
+SQL Server Analysis
 
 SQL Server forms the foundation of the analytical workflow.
 
-### Main activities
-
-- Source-table auditing
-- Missing-value checks
-- Duplicate checks
-- Invalid-value checks
-- Key and relationship validation
-- Data cleaning and transformation
-- KPI definitions
-- Executive sales analysis
-- Website and marketing analysis
-- Product and refund analysis
-- Customer/session analysis
-- Diagnostic analysis
-- Final KPI reconciliation
-
-### Analytical layer
-
-```text
-dbo raw tables
+Main Activities
+Source-table auditing
+Row-count validation
+Missing-value checks
+Duplicate checks
+Invalid-value checks
+Primary-key validation
+Relationship validation
+Data cleaning
+Data transformation
+KPI development
+Executive sales analysis
+Website and marketing analysis
+Product and refund analysis
+Customer/session analysis
+Diagnostic analysis
+KPI reconciliation
+SQL Analytical Layer
+Raw dbo Tables
       ↓
-analytics.vw_* clean analytical views
+Cleaning & Validation
+      ↓
+analytics.vw_* Views
       ↓
 Python + Power BI
-```
+SQL Analysis Modules
+SQL Module	Purpose
+Final SQL Master	Complete SQL workflow
+Final Audit Revalidation	Final data-quality and relationship checks
+Data Cleaning & Transformation	Cleaning and analytical preparation
+KPI Definitions	Standardized business metrics
+Executive Sales Analysis	Revenue, orders, profit, and sales trends
+Website & Marketing Analysis	Sessions, conversion, devices, and marketing
+Product & Refund Analysis	Product performance and refunds
+Customer Analysis	Customer and session behavior
+Diagnostic Analysis	Cross-dimensional business analysis
+KPI Reconciliation	Final KPI consistency checks
+KPI Snapshot	Final business KPI output
+KPI Framework
+Gross Revenue
 
-Keeping raw tables separate from analytical views improves traceability and reproducibility.
-
----
-
-## 6. KPI Framework
-
-### Gross Revenue
 Sum of order-line selling prices.
 
-### Gross Profit
-```text
+Gross Revenue = SUM(Order Item Selling Price)
+Gross Profit
 Gross Profit = Revenue - COGS
-```
-
-### Gross Margin %
-```text
+Gross Margin
 Gross Margin % = (Revenue - COGS) / Revenue × 100
-```
-
-### Average Order Value
-```text
+Average Order Value
 AOV = Revenue / Number of Orders
-```
-
-### Net Revenue
-```text
+Net Revenue
 Net Revenue = Gross Revenue - Refunds
-```
-
-### Conversion Rate
-```text
+Conversion Rate
 Conversion Rate = Converted Sessions / Total Sessions × 100
-```
-
-### Revenue per Session
-```text
+Revenue per Session
 Revenue per Session = Revenue / Sessions
-```
-
-### Refund Rate
-```text
+Refund Rate
 Refund Rate = Refund Amount / Revenue × 100
-```
+Power BI Dashboards
 
----
+Four Power BI dashboards were developed for interactive business analysis.
 
-## 7. Power BI Dashboards
+01. Executive Overview
 
-Four dashboards were developed for interactive business analysis.
+Provides a high-level view of:
 
-### Executive Overview
-![Executive Overview](screenshots/Executive-Overview.png)
+Revenue
+Net revenue
+Orders
+Sessions
+Conversion rate
+Average order value
+Gross profit
+Gross margin
+Overall business performance
+02. Marketing & Session Funnel
 
-High-level view of revenue, orders, sessions, conversion, AOV, profitability, and overall business performance.
+Analyzes:
 
-### Marketing & Session Funnel
-![Marketing & Session Funnel](screenshots/Session_BY_Marketing_Source__Python_Visualization.png)
+Marketing sources
+Session volume
+Conversion performance
+Device performance
+Repeat vs new sessions
+Session trends
+Marketing efficiency
+03. Product & Refunds
 
-Analyzes marketing sources, session behavior, conversion, device performance, and trends.
+Analyzes:
 
-### Product & Refunds
-![Product & Refunds](screenshots/Refund_by_product_By_SQL.png)
+Product revenue
+Gross profit
+Gross margin
+Product sales
+Refund amounts
+Refund rates
+Product-level refund concentration
+04. Sales & Profitability
 
-Analyzes product revenue, gross profit, margins, refund amounts, and refund rates.
+Analyzes:
 
-### Sales & Profitability
-![Sales & Profitability](screenshots/Sales & Profitability.png)
+Sales trends
+Revenue
+Orders
+Profitability
+Gross margin
+Supporting business KPIs
+Python EDA & Business Analysis
 
-Analyzes sales trends, profitability, and supporting KPIs.
+Python was used after the SQL analytical layer to perform exploratory, diagnostic, and business analysis.
 
-**Power BI file:** `02_PowerBI_Dashboard/PRP_Ecommerce_Digital_Analytics_Dashboard.pbix`  
-**Static export:** `02_PowerBI_Dashboard/Power BI Dashboards.pdf`
-
----
-
-## 8. Python EDA & Business Analysis
-
-Python was used after the SQL analytical layer for:
-
-- SQL Server data extraction
-- Data validation
-- Missing-value analysis
-- Duplicate analysis
-- Descriptive statistics
-- Time-series analysis
-- Marketing analysis
-- Device analysis
-- Product analysis
-- Refund analysis
-- Repeat vs new-session analysis
-- Business rankings and findings
-
-### Main libraries
-
-```text
+Analysis Areas
+SQL Server data extraction
+Data validation
+Missing-value analysis
+Duplicate analysis
+Descriptive statistics
+Time-series analysis
+Marketing analysis
+Device analysis
+Product analysis
+Refund analysis
+Customer/session analysis
+Repeat vs new-session analysis
+Business rankings
+KPI analysis
+Business findings
+Main Libraries
 Pandas
 NumPy
 Matplotlib
 Seaborn
 Scikit-learn
-pyodbc
+PyODBC
 Jupyter
-```
+Machine Learning — Conversion Prediction
 
----
+A first-pass Logistic Regression model was developed to predict whether a website session converts.
 
-## 9. Machine Learning — Conversion Prediction
-
-A first-pass **Logistic Regression** model was developed to predict whether a website session converts.
-
-### Target
-
-```text
+Target Variable
 converted_session
 
-0 = Not converted
+0 = Not Converted
 1 = Converted
-```
+Features
 
-### Features
+The model uses session-level attributes including:
 
-- Reporting device type
-- UTM source
-- UTM campaign
-- UTM content
-- HTTP referrer
-- Repeat-session flag
-- Session hour
-- Day
-- Month
-- Year
+Device type
+UTM source
+UTM campaign
+UTM content
+HTTP referrer
+Repeat-session flag
+Session hour
+Day
+Month
+Year
+Leakage Control
 
-### Leakage control
+The following outcome-related variables were intentionally excluded:
 
-`order_count` and `session_revenue` were intentionally excluded because they reveal outcome-related information and could create data leakage.
+order_count
+session_revenue
 
----
+These variables can directly reveal conversion outcomes and therefore could introduce data leakage into the prediction model.
 
-## 10. Model Evaluation
+Machine Learning Pipeline
+Session Data
+      ↓
+Feature Selection
+      ↓
+Train / Test Split
+      ↓
+Numerical + Categorical Preprocessing
+      ↓
+One-Hot Encoding
+      ↓
+Logistic Regression
+      ↓
+Probability Prediction
+      ↓
+Model Evaluation
 
-| Metric | Score |
-|---|---:|
-| Accuracy | **93.17%** |
-| Precision | **0.00** |
-| Recall | **0.00** |
-| F1 Score | **0.00** |
-| ROC-AUC | **0.632** |
+The preprocessing workflow uses a ColumnTransformer and pipeline-based modeling to keep feature preparation consistent between training and prediction.
 
-### Interpretation
+Model Evaluation
+Metric	Score
+Accuracy	93.17%
+Precision	0.00
+Recall	0.00
+F1 Score	0.00
+ROC-AUC	0.632
+Model Interpretation
 
-Only about **6.8% of sessions convert**, so the target is highly imbalanced.
+Approximately 6.8% of website sessions convert, resulting in a highly imbalanced target variable.
 
-Therefore, 93% accuracy can be misleading because predicting "not converted" for almost every session can still produce high accuracy.
+Because of this imbalance, accuracy alone is not a sufficient measure of model quality.
 
-**ROC-AUC = 0.632** indicates that the model is better than random at distinguishing converting sessions from non-converting sessions, but its predictive ability is still limited.
+A model can achieve high accuracy by predicting the majority class while failing to correctly identify converting sessions.
 
-The model is therefore a **first-pass analytical baseline**, not a production-ready prediction system.
+The model achieved:
 
-### Potential improvements
+ROC-AUC = 0.632
 
-- `class_weight='balanced'`
-- SMOTE / oversampling
-- Decision-threshold tuning
-- Precision-recall analysis
-- Additional feature engineering
-- Tree-based model comparison
-- Cross-validation and model selection
+This indicates some ability to distinguish converting sessions from non-converting sessions, but the current model has limited positive-class performance.
 
----
+The Logistic Regression model is therefore treated as a first-pass analytical baseline rather than a production-ready prediction system.
 
-## 11. Key Business Insights
+Potential Improvements
+Class weighting
+SMOTE / oversampling
+Decision-threshold tuning
+Precision-recall analysis
+Additional feature engineering
+Tree-based model comparison
+Cross-validation
+Hyperparameter tuning
+Key Business Insights
+Revenue Concentration
 
-### Revenue concentration
-**The Original Mr. Fuzzy** contributes approximately **62% of total revenue**, creating both strong business importance and concentration risk.
+The Original Mr. Fuzzy contributes approximately 62% of total revenue.
 
-### Mobile conversion gap
-```text
+This creates strong dependence on a single high-performing product and makes product-level monitoring important.
+
+Mobile Conversion Gap
 Mobile   = 3.09%
 Desktop  = 8.50%
-```
-The gap suggests investigating mobile UX, navigation, page performance, and checkout friction.
 
-### Marketing efficiency
-`gsearch` generates high traffic volume, but traffic volume alone does not represent business value. Channels should be evaluated using conversion rate, revenue per session, revenue, and profitability.
+Desktop sessions convert substantially more frequently than mobile sessions.
 
-### Repeat-session performance
-```text
-Repeat sessions = 7.83%
-New sessions    = 6.64%
-```
-Repeat visitors show stronger conversion performance, supporting retention and remarketing analysis.
+This indicates an area for investigation across:
 
-### Product and refund risk
-Refund dollars are concentrated in the highest-volume product, so monitoring should consider both absolute refund dollars and refund rate.
+Mobile user experience
+Navigation
+Page performance
+Product discovery
+Checkout experience
+Mobile payment flow
+Marketing Efficiency
 
-### Session decline
-Session volume has declined since late 2014, contributing to lower order volume and representing an area for further investigation.
+gsearch generates high traffic volume, but traffic volume alone does not represent business value.
 
----
+Marketing channels should be evaluated using:
 
-## 12. Business Recommendations
+Conversion rate
+Revenue per session
+Revenue
+Orders
+Profitability
+Repeat Session Performance
+Repeat Sessions = 7.83%
+New Sessions    = 6.64%
 
-| Area | Recommendation | Expected Direction |
-|---|---|---|
-| Mobile Experience | Audit and improve the mobile checkout funnel | Improve mobile conversion |
-| Marketing | Evaluate channels using conversion and revenue/session rather than traffic alone | Improve marketing efficiency |
-| Product Mix | Protect high-revenue products and promote strong-margin, low-refund products | Improve profitability |
-| Product Quality | Investigate high-refund products | Reduce refund leakage |
-| Customer Retention | Develop incentives for repeat visitors | Increase repeat-session contribution |
-| ML Model | Address class imbalance and tune the prediction threshold | Improve useful predictive performance |
+Repeat sessions show stronger conversion performance than new sessions.
 
----
+This supports further analysis of:
 
-## 13. Repository Structure
+Customer retention
+Remarketing
+Returning visitors
+Loyalty initiatives
+Product and Refund Risk
 
-```text
+Refund dollars are concentrated in the highest-volume product.
+
+Therefore, product monitoring should consider both:
+
+Absolute Refund Amount
++
+Refund Rate
+
+rather than evaluating refund performance using only one metric.
+
+Session Decline
+
+Session volume has declined since late 2014, contributing to lower order volume.
+
+This represents an area for further investigation across:
+
+Marketing acquisition
+Website traffic
+Customer retention
+Device performance
+Channel performance
+Business Recommendations
+Area	Recommendation	Expected Direction
+Mobile Experience	Audit and improve the mobile conversion funnel	Improve mobile conversion
+Marketing	Evaluate channels using conversion and revenue per session instead of traffic alone	Improve marketing efficiency
+Product Mix	Protect high-revenue products and promote strong-margin, low-refund products	Improve profitability
+Product Quality	Investigate products with high refund exposure	Reduce refund leakage
+Customer Retention	Develop strategies for repeat visitors	Increase repeat-session contribution
+Conversion Model	Address class imbalance and tune the prediction threshold	Improve useful predictive performance
+Project Visual Gallery
+Business Recommendations
+
+Conversion Analysis
+
+Device Analysis
+
+Customer Analysis
+
+Gross Profit by Product
+
+Gross Profit Trend
+
+Machine Learning
+
+SQL KPI Analysis
+
+Repository Structure
 ecommerce-product-analytics/
 │
 ├── 01_SQL_Codes/
@@ -422,166 +463,218 @@ ecommerce-product-analytics/
 │   └── PRP_Ecommerce_Digital_Analytics_Final_Presentation.pdf
 │
 ├── screenshots/
+│
 ├── data/
+│
 ├── requirements.txt
+│
 ├── .gitignore
+│
 ├── LICENSE
+│
 └── README.md
-```
+How to Run
+SQL Server
+Create a SQL Server database.
+CREATE DATABASE PRP_Ecommerce_Analytics;
+Import the six source CSV files into the appropriate dbo tables.
+Run:
+01_SQL_Codes/FINAL_SQL_MASTER.sql
+Verify the generated analytical views.
+Run the individual SQL analysis scripts when required.
+Python / Jupyter
 
----
+Create a virtual environment:
 
-## 14. How to Run
-
-### SQL Server
-
-1. Create a database, for example `PRP_Ecommerce_Analytics`.
-2. Import the six source CSV files into matching `dbo.*` tables.
-3. Run `01_SQL_Codes/FINAL_SQL_MASTER.sql`.
-4. Verify the generated `analytics.vw_*` views.
-5. Individual EDA scripts can be executed separately when required.
-
-### Python / Jupyter
-
-```bash
 python -m venv venv
-```
 
-Windows:
+Activate it on Windows:
 
-```bash
-venv\\Scripts\\activate
-```
+venv\Scripts\activate
 
 Install dependencies:
 
-```bash
 pip install -r requirements.txt
-```
 
 Open:
 
-```text
 03_Python_Analysis_ML/ECommerce_Analytics_Python_ML_Analysis.ipynb
-```
 
-The notebook connects to SQL Server using `pyodbc`. Update the connection variables for your own environment before running.
+The notebook connects to SQL Server using pyodbc.
 
-### Power BI
+Update the database connection variables according to your local SQL Server environment before running the notebook.
+
+Power BI
 
 Open:
 
-```text
 02_PowerBI_Dashboard/PRP_Ecommerce_Digital_Analytics_Dashboard.pbix
-```
 
-and configure the SQL Server connection for your environment.
+Configure the SQL Server connection for your environment and refresh the data model.
 
----
+Project Deliverables
+Deliverable	Location
+SQL Analysis & Data Quality Scripts	01_SQL_Codes/
+Power BI Dashboard	02_PowerBI_Dashboard/
+Python EDA & ML Notebook	03_Python_Analysis_ML/
+Saved ML Model	03_Python_Analysis_ML/conversion_prediction_model.pkl
+Python Business Outputs	03_Python_Analysis_ML/outputs/
+Final Presentation	04_Presentation/
+Project Visuals	screenshots/
+Project Documentation	README.md
+Data Availability
 
-## 15. Deliverables
+The project uses six raw CSV datasets:
 
-| Deliverable | Location |
-|---|---|
-| SQL analysis and data-quality scripts | `01_SQL_Codes/` |
-| Power BI dashboard | `02_PowerBI_Dashboard/` |
-| Python EDA & ML notebook | `03_Python_Analysis_ML/` |
-| Saved ML model | `03_Python_Analysis_ML/conversion_prediction_model.pkl` |
-| Python business outputs | `03_Python_Analysis_ML/outputs/` |
-| Final presentation | `04_Presentation/` |
-| Project visuals | `screenshots/` |
-
----
-
-## 16. Data Availability
-
-The project uses six raw CSV files:
-
-```text
 products.csv
 website_sessions.csv
 website_pageviews.csv
 orders.csv
 order_items.csv
 order_item_refunds.csv
-```
 
 Large raw files may be excluded from the public GitHub repository to keep the repository lightweight.
 
-If the data is hosted separately, add the approved access link below:
+If the datasets are hosted separately, the approved data-access link can be added below:
 
-```text
-Data access: <ADD YOUR DATA LINK HERE>
-```
+Data Access: <ADD DATA LINK HERE>
 
 Do not commit confidential, restricted, or sensitive business data to a public repository.
 
----
+Security & Data Handling
 
-## 17. Skills Demonstrated
+The project should not contain confidential credentials or restricted business information.
 
-### SQL / Data Analytics
-- SQL Server / T-SQL
-- Data cleaning and validation
-- Data-quality checks
-- Joins, CTEs and aggregations
-- Window functions
-- CASE expressions
-- Date functions
-- Views
-- KPI development
-- Descriptive and diagnostic analysis
+Never commit:
 
-### Python
-- Pandas
-- NumPy
-- Matplotlib
-- Seaborn
-- Jupyter Notebook
-- Data manipulation
-- Visualization
-- Business analysis
+Database Passwords
+API Keys
+Connection Strings
+Private Credentials
+Sensitive Business Data
 
-### Machine Learning
-- Binary classification
-- Logistic Regression
-- Train/test split
-- Feature preprocessing
-- Pipeline
-- ColumnTransformer
-- Probability prediction
-- Confusion matrix
-- Classification report
-- ROC curve
-- ROC-AUC
-- Class imbalance
-- Data leakage prevention
+Recommended .gitignore entries:
 
-### Power BI
-- Power Query
-- Data modeling
-- DAX
-- KPI cards
-- Interactive filters
-- Time-series analysis
-- Product analysis
-- Marketing analysis
-- Business dashboards
+.env
+*.env
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+Skills Demonstrated
+SQL / Data Analytics
+SQL Server
+T-SQL
+Data cleaning
+Data validation
+Data-quality analysis
+Joins
+CTEs
+Aggregations
+Window functions
+CASE expressions
+Date functions
+Analytical views
+KPI development
+Descriptive analysis
+Diagnostic analysis
+Business analysis
+Python
+Pandas
+NumPy
+Matplotlib
+Seaborn
+Jupyter Notebook
+Data manipulation
+Data validation
+Exploratory data analysis
+Visualization
+Business analysis
+Machine Learning
+Binary classification
+Logistic Regression
+Train/test split
+Feature preprocessing
+One-Hot Encoding
+Pipeline
+ColumnTransformer
+Probability prediction
+Confusion matrix
+Classification report
+ROC curve
+ROC-AUC
+Class imbalance
+Data leakage prevention
+Power BI
+Power Query
+Data modeling
+DAX
+KPI cards
+Interactive filters
+Time-series analysis
+Product analysis
+Marketing analysis
+Sales analysis
+Profitability analysis
+Business dashboards
+Tools
+SQL Server
+Jupyter
+Python
+Power BI
+Git
+GitHub
+Analytical Limitations
+Limitation	Explanation
+Conversion imbalance	Only approximately 6.8% of sessions convert
+Model performance	Current Logistic Regression is a baseline model
+Positive-class performance	Precision, recall, and F1 are currently 0
+Accuracy	High accuracy is influenced by class imbalance
+Causality	Diagnostic analysis identifies relationships but does not prove causation
+Historical data	Session and order trends reflect the available historical period
+Product concentration	Revenue is heavily concentrated in The Original Mr. Fuzzy
+Final Conclusion
 
----
+This project demonstrates how raw e-commerce data can be transformed into a structured analytical solution using SQL Server, Python, Machine Learning, and Power BI.
 
-## 18. Final Conclusion
+The project provides a complete workflow for:
 
-This project demonstrates how raw e-commerce data can be transformed into **validated metrics, interactive reporting, analytical insights, a machine-learning baseline, and actionable business recommendations**.
+DATA
+ ↓
+AUDIT
+ ↓
+CLEAN
+ ↓
+VALIDATE
+ ↓
+TRANSFORM
+ ↓
+ANALYZE
+ ↓
+VISUALIZE
+ ↓
+MODEL
+ ↓
+EVALUATE
+ ↓
+RECOMMEND
 
-The analysis highlights **mobile conversion, marketing efficiency, product concentration, refund risk, repeat-session performance, and declining session volume** as important areas for business attention.
+The analysis highlights important business areas including:
 
-The Logistic Regression model provides some useful signal, but its current performance is limited by **class imbalance and weak positive-class performance**. It should therefore be treated as a baseline for further experimentation rather than a production decision engine.
+Mobile conversion performance
+Marketing efficiency
+Product revenue concentration
+Refund exposure
+Repeat-session performance
+Session trends
+Product profitability
+Conversion prediction
 
----
+The Logistic Regression model provides an initial baseline for conversion prediction. However, the highly imbalanced target and weak positive-class metrics indicate that additional feature engineering, class-imbalance handling, threshold tuning, and model experimentation would be required before considering a production-ready prediction system.
 
-## 👤 Author
+Author
 
-**Shubham Vishwakarma**  
-**Data Analyst | SQL | Python | Power BI | Machine Learning**
+Shubham Vishwakarma
 
+Data Analyst | SQL | Python | Power BI | Machine Learning
+
+GitHub: shubham-vishwakarma-analytics
